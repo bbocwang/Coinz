@@ -1,29 +1,100 @@
 package uk.ac.ed.coinz;
 
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+public class MainActivity extends AppCompatActivity  implements View.OnClickListener{
 
     private TextView helloworld;
+    private FirebaseAuth mAuth;
+    EditText loginUsername;
+    EditText loginPassword;
+    ProgressBar progressBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        helloworld = findViewById(R.id.mainview);
-        helloworld.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openLoginActivity();
-            }
-        });
+        mAuth = FirebaseAuth.getInstance();
+        findViewById(R.id.TextViewRegister).setOnClickListener(this);
+        findViewById(R.id.loginButton).setOnClickListener(this);
+        loginUsername = (EditText) findViewById(R.id.LoginUsername);
+        loginPassword = (EditText) findViewById(R.id.LoginPassword);
+        progressBar = (ProgressBar) findViewById(R.id.progressbar0);
     }
 
-    public void openLoginActivity(){
-        Intent intent = new Intent(this,LoginActivity.class);
-        startActivity(intent);
+    private void login() {
+        String email = loginUsername.getText().toString().trim();
+        String password = loginPassword.getText().toString().trim();
+        if(email.isEmpty()){
+            loginUsername.setError("An email Address is required");
+            loginUsername.requestFocus();
+            return;
+        }
+        if(!Patterns.EMAIL_ADDRESS.matcher(email).matches()){
+            loginUsername.setError(("This is not a valid email"));
+            loginUsername.requestFocus();
+            return;
+        }
+        if(password.isEmpty()){
+            loginPassword.setError("Password is required");
+            loginPassword.requestFocus();
+            return;
+        }
+        if(password.length()<6){
+            loginPassword.setError("The length of password should greater than 6");
+            loginPassword.requestFocus();
+            return;
+        }
+
+        progressBar.setVisibility(View.VISIBLE);
+
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        progressBar.setVisibility((View.GONE));
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            Intent intent = new Intent(MainActivity.this,GameActivity.class);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            startActivity(intent);
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Toast.makeText(MainActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+
+                        // ...
+                    }
+                });
     }
+
+    public void onClick(View view){
+        switch (view.getId()){
+            case R.id.TextViewRegister:
+                startActivity(new Intent(this,RegisterActivity.class));
+
+            case R.id.loginButton:
+                login();
+                break;
+        }
+    }
+
 }
