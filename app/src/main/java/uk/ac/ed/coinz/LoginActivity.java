@@ -27,16 +27,8 @@ public class LoginActivity extends AppCompatActivity {
     public void updateUI(FirebaseUser currentUser){
 
     }
-    mAuth.createUserwithEmailAndPassword(email,password)
-            .addOnCompleteListener
-            (this, task ->{
-        if (task.isSuccessful()) {
-            //sign in sucess,update ui with user info
-        } else {
-            //sign in failed, display a message to the user
-        }
-    });
+
 
 
     }
-}
+
