@@ -28,7 +28,8 @@ public class LoginActivity extends AppCompatActivity {
 
     }
     mAuth.createUserwithEmailAndPassword(email,password)
-            .addOnCompleteListener(this, task ->{
+            .addOnCompleteListener
+            (this, task ->{
         if (task.isSuccessful()) {
             //sign in sucess,update ui with user info
         } else {
