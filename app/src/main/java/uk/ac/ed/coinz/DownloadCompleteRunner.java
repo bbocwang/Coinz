@@ -6,4 +6,6 @@ public class DownloadCompleteRunner{
     public static void downloadComplete(String result){
         DownloadCompleteRunner.result = result;
         }
-        }
+
+
+}
