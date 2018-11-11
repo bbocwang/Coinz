@@ -3,6 +3,7 @@ package uk.ac.ed.coinz;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
@@ -12,8 +13,22 @@ import android.util.Log;
 import android.widget.TextView;
 
 import com.google.android.gms.common.util.IOUtils;
+import com.mapbox.android.core.location.LocationEngine;
+import com.mapbox.android.core.location.LocationEngineListener;
+import com.mapbox.android.core.location.LocationEnginePriority;
+import com.mapbox.android.core.location.LocationEngineProvider;
+import com.mapbox.android.core.permissions.PermissionsListener;
+import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
+import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.location.modes.CameraMode;
+import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
+import com.mapbox.mapboxsdk.maps.MapboxMap;
+import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerOptions;
+import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +39,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
@@ -32,7 +48,7 @@ import io.grpc.internal.IoUtils;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class GameActivity extends AppCompatActivity {
+public class GameActivity extends AppCompatActivity implements OnMapReadyCallback,LocationEngineListener,PermissionsListener{
     private final String tag = "GameActivity";
 
     Calendar calendar = Calendar.getInstance();
@@ -44,6 +60,12 @@ public class GameActivity extends AppCompatActivity {
     public String json = "";
 
     private MapView mapView;
+    private MapboxMap map;
+    private PermissionsManager permissionsManager;
+    private LocationEngine locationEngine;
+    @SuppressWarnings("deprecation")
+    private LocationLayerPlugin locationLayerPlugin;
+    private Location originLocation;
 
 
     @Override
@@ -54,8 +76,87 @@ public class GameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_game);
         mapView = (MapView)findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
+        mapView.getMapAsync(this);
 
 
+    }
+
+    @Override
+    public void onMapReady(MapboxMap mapboxMap) {
+        map = mapboxMap;
+        enableLocation();
+
+    }
+
+    private void enableLocation(){
+        if (permissionsManager.areLocationPermissionsGranted(this)){
+            initializeLocationEngine();
+            initializeLocationLayer();
+        }
+        else{
+            permissionsManager = new PermissionsManager(this);
+            permissionsManager.requestLocationPermissions(this);
+        }
+    }
+    @SuppressWarnings("MissingPermission")
+    private void initializeLocationEngine(){
+        locationEngine = new LocationEngineProvider(this).obtainBestLocationEngineAvailable();
+        locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
+        locationEngine.activate();
+        Location lastLocation = locationEngine.getLastLocation();
+        if(lastLocation != null){
+            originLocation = lastLocation;
+            setCameraPosition(lastLocation);
+        }else{
+            locationEngine.addLocationEngineListener(this);
+        }
+    }
+
+    @SuppressWarnings("MissingPermission")
+    private void initializeLocationLayer(){
+        //noinspection deprecation
+        locationLayerPlugin = new LocationLayerPlugin(mapView,map,locationEngine);
+        locationLayerPlugin.setLocationLayerEnabled(true);
+        locationLayerPlugin.setCameraMode(CameraMode.TRACKING);
+        locationLayerPlugin.setRenderMode(RenderMode.NORMAL);
+    }
+
+    private void setCameraPosition(Location location){
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),
+                location.getLongitude()),13.0));
+    }
+
+    @Override
+    @SuppressWarnings("MissingPermission")
+    public void onConnected() {
+        locationEngine.requestLocationUpdates();
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        if(location != null){
+            originLocation = location;
+            setCameraPosition(location);
+        }
+    }
+
+    @Override
+    public void onExplanationNeeded(List<String> permissionsToExplain) {
+        //present toast or dialog why they need to grant location permission
+
+    }
+
+    @Override
+    public void onPermissionResult(boolean granted) {
+        if(granted){
+            enableLocation();
+        }
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        permissionsManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     private void downloadjson() {
@@ -94,6 +195,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     @Override
+    @SuppressWarnings("MissingPermission")
     public void onStart(){
         super.onStart();
         mapView.onStart();
@@ -107,6 +209,13 @@ public class GameActivity extends AppCompatActivity {
         Log.d(tag, "[onStart] Recalled lastDownloadDate is '"+downloadDate+"'");
         //get geojson file
         downloadjson();
+
+        if(locationEngine != null){
+            locationEngine.requestLocationUpdates();
+        }
+        if(locationLayerPlugin != null){
+            locationLayerPlugin.onStart();
+        }
     }
 
     @Override
@@ -140,6 +249,13 @@ public class GameActivity extends AppCompatActivity {
         SharedPreferences.Editor editor2 = settings.edit();
         editor2.putString("json",json);
         editor2.apply();
+
+        if (locationEngine != null){
+            locationEngine.removeLocationUpdates();
+        }
+        if(locationLayerPlugin != null){
+            locationLayerPlugin.onStop();
+        }
     }
 
     @Override
@@ -158,6 +274,9 @@ public class GameActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
+        if(locationEngine != null){
+            locationEngine.deactivate();
+        }
     }
 
     void downloadComplete(String result){
