@@ -53,10 +53,10 @@ public class GameActivity extends AppCompatActivity {
     private void downloadjson() {
         DownloadFileTask downloadFileTask = new DownloadFileTask();
         //http://homepages.inf.ed.ac.uk/stg/coinz/2018/09/28/coinzmap.geojson
-        if(currentDate == downloadDate) {
+        if(currentDate != downloadDate) {
             downloadDate = currentDate;
         }
-            downloadFileTask.execute("http://homepages.inf.ed.ac.uk/stg/coinz/"
+        downloadFileTask.execute("http://homepages.inf.ed.ac.uk/stg/coinz/"
                     + currentDate+"/coinzmap.geojson");
 
     }
