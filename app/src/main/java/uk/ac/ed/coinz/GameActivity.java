@@ -47,6 +47,7 @@ import java.util.concurrent.ExecutionException;
 import io.grpc.internal.IoUtils;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.security.AccessController.getContext;
 
 public class GameActivity extends AppCompatActivity implements OnMapReadyCallback,LocationEngineListener,PermissionsListener{
     private final String tag = "GameActivity";
@@ -77,8 +78,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView = (MapView)findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
-
-
     }
 
     @Override
