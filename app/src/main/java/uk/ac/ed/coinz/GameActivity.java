@@ -2,6 +2,7 @@ package uk.ac.ed.coinz;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.AsyncTask;
@@ -10,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.mapbox.android.core.permissions.PermissionsListener;
@@ -76,6 +78,48 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
         mapboxMap.setOnMarkerClickListener((MapboxMap.OnMarkerClickListener) this);
+        findViewById(R.id.collectButton).setOnClickListener((View.OnClickListener) this);
+    }
+
+    public void onClick(View view){
+        switch (view.getId()){
+            case R.id.collectButton:
+                collect();
+                break;
+        }
+    }
+
+    private void collect() {
+        for (Feature feature : features) {
+            Geometry geometry = feature.geometry();
+            Point p = (Point) geometry;
+            List<Double> coordinates = p.coordinates();
+            String currency = feature.properties().get("currency").toString();
+            currency = currency.substring(1, currency.length() - 1);
+
+            String id = feature.properties().get("id").toString();
+            id = id.substring(1, id.length() - 1);
+
+            String value = feature.properties().get("value").toString();
+            value = value.substring(1, value.length() - 1);
+
+            String symbol = feature.properties().get("marker-symbol").toString();
+            symbol = symbol.substring(1, symbol.length() - 1);
+
+            String color = feature.properties().get("marker-color").toString();
+            color = color.substring(1, currency.length() - 1);
+
+            Location markerLoc = new Location("");
+            markerLoc.setLatitude(coordinates.get(1));
+            markerLoc.setLongitude(coordinates.get(0));
+
+            float distanceInMeters = originLocation.distanceTo(markerLoc);
+            if(distanceInMeters <= 20){
+                Log.d(tag,"get coin"+currency+value+"current location"+originLocation.toString());
+            }else{
+                Log.d(tag,"no coins in 20m"+"current location"+originLocation.toString());
+            }
+        }
     }
 
     @Override
@@ -110,13 +154,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             permissionsManager.requestLocationPermissions(this);
         }
     }
-
-
-    private void setCameraPosition(Location location){
-        mapboxMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),
-                location.getLongitude()),13.0));
-    }
-
 
 
     @Override
@@ -249,23 +286,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                         .position(new LatLng(coordinates.get(1),coordinates.get(0))).icon(yellow_icon));
                     markers.add(coinMarker);
             }
-
-
         }
-        itemizedIconOverlayGT = new ItemizedIconOverlay(activity, alMarkerGT,
-                new OnItemGestureListener<Marker>() {
-
-                    @Override
-                    public boolean onItemSingleTapUp(int index, Marker item) {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean onItemLongPress(int index, Marker item) {
-                        return false;
-                    }
-                });
-        mv.addItemizedOverlay(itemizedIconOverlayGT);
     }
 
     @Override
@@ -299,7 +320,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         SharedPreferences.Editor editor2 = settings.edit();
         editor2.putString("json",json);
         editor2.apply();
-
     }
 
     @Override
