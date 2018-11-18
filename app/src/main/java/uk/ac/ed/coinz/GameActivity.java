@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.util.IOUtils;
 import com.mapbox.android.core.location.LocationEngine;
@@ -22,6 +23,7 @@ import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.location.LocationComponent;
 import com.mapbox.mapboxsdk.location.modes.CameraMode;
 import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
@@ -49,7 +51,7 @@ import io.grpc.internal.IoUtils;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.security.AccessController.getContext;
 
-public class GameActivity extends AppCompatActivity implements OnMapReadyCallback,LocationEngineListener,PermissionsListener{
+public class GameActivity extends AppCompatActivity implements OnMapReadyCallback,PermissionsListener{
     private final String tag = "GameActivity";
 
     Calendar calendar = Calendar.getInstance();
@@ -61,11 +63,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     public String json = "";
 
     private MapView mapView;
-    private MapboxMap map;
+    private MapboxMap mapboxMap;
     private PermissionsManager permissionsManager;
-    private LocationEngine locationEngine;
     @SuppressWarnings("deprecation")
-    private LocationLayerPlugin locationLayerPlugin;
     private Location originLocation;
 
 
@@ -82,73 +82,60 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(MapboxMap mapboxMap) {
-        map = mapboxMap;
-        enableLocation();
+        if(mapboxMap == null){
+            Log.d(tag,"[onMapReady] mapBox is null");
+        }
+        else{
+            this.mapboxMap = mapboxMap;
+            mapboxMap.getUiSettings().setCompassEnabled(true);
+            mapboxMap.getUiSettings().setZoomControlsEnabled(true);
+            enableLocationComponent();
+        }
 
     }
 
-    private void enableLocation(){
+
+    @SuppressWarnings( {"MissingPermission"})
+    private void enableLocationComponent(){
         if (permissionsManager.areLocationPermissionsGranted(this)){
-            initializeLocationEngine();
-            initializeLocationLayer();
+            Log.d(tag,"Permissions are granted");
+            LocationComponent locationComponent = mapboxMap.getLocationComponent();
+            locationComponent.activateLocationComponent(this);
+            locationComponent.setLocationComponentEnabled(true);
+            locationComponent.setCameraMode(CameraMode.TRACKING);
+            originLocation = locationComponent.getLastKnownLocation();
         }
         else{
+            Log.d(tag,"Permissions are not granted");
             permissionsManager = new PermissionsManager(this);
             permissionsManager.requestLocationPermissions(this);
         }
     }
-    @SuppressWarnings("MissingPermission")
-    private void initializeLocationEngine(){
-        locationEngine = new LocationEngineProvider(this).obtainBestLocationEngineAvailable();
-        locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
-        locationEngine.activate();
-        Location lastLocation = locationEngine.getLastLocation();
-        if(lastLocation != null){
-            originLocation = lastLocation;
-            setCameraPosition(lastLocation);
-        }else{
-            locationEngine.addLocationEngineListener(this);
-        }
-    }
 
-    @SuppressWarnings("MissingPermission")
-    private void initializeLocationLayer(){
-        //noinspection deprecation
-        locationLayerPlugin = new LocationLayerPlugin(mapView,map,locationEngine);
-        locationLayerPlugin.setLocationLayerEnabled(true);
-        locationLayerPlugin.setCameraMode(CameraMode.TRACKING);
-        locationLayerPlugin.setRenderMode(RenderMode.NORMAL);
-    }
 
     private void setCameraPosition(Location location){
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),
+        mapboxMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),
                 location.getLongitude()),13.0));
     }
 
-    @Override
-    @SuppressWarnings("MissingPermission")
-    public void onConnected() {
-        locationEngine.requestLocationUpdates();
-    }
 
-    @Override
-    public void onLocationChanged(Location location) {
-        if(location != null){
-            originLocation = location;
-            setCameraPosition(location);
-        }
-    }
 
     @Override
     public void onExplanationNeeded(List<String> permissionsToExplain) {
         //present toast or dialog why they need to grant location permission
-
+        Log.d(tag,"permissions: "+permissionsToExplain.toString());
+        Toast.makeText(this, R.string.user_location_permission_explanation,
+                Toast.LENGTH_LONG).show();
     }
 
     @Override
     public void onPermissionResult(boolean granted) {
         if(granted){
-            enableLocation();
+            enableLocationComponent();
+        }else {
+            Toast.makeText(this, R.string.user_location_permission_not_granted,
+                    Toast.LENGTH_LONG).show();
+            finish();
         }
 
     }
@@ -209,12 +196,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         //get geojson file
         downloadjson();
 
-        if(locationEngine != null){
-            locationEngine.requestLocationUpdates();
-        }
-        if(locationLayerPlugin != null){
-            locationLayerPlugin.onStart();
-        }
+
     }
 
     @Override
@@ -249,12 +231,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         editor2.putString("json",json);
         editor2.apply();
 
-        if (locationEngine != null){
-            locationEngine.removeLocationUpdates();
-        }
-        if(locationLayerPlugin != null){
-            locationLayerPlugin.onStop();
-        }
     }
 
     @Override
@@ -273,15 +249,11 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
-        if(locationEngine != null){
-            locationEngine.deactivate();
-        }
     }
 
     void downloadComplete(String result){
         json = result;
         Log.d(tag,"[downloadComplete] Storing json file"+json);
-
     }
 
 
