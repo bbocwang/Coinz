@@ -10,46 +10,35 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.util.IOUtils;
-import com.mapbox.android.core.location.LocationEngine;
-import com.mapbox.android.core.location.LocationEngineListener;
-import com.mapbox.android.core.location.LocationEnginePriority;
-import com.mapbox.android.core.location.LocationEngineProvider;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
+import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.Geometry;
+import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.annotations.Marker;
+import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.location.LocationComponent;
 import com.mapbox.mapboxsdk.location.modes.CameraMode;
-import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
-import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerOptions;
-import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
-
-import io.grpc.internal.IoUtils;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.security.AccessController.getContext;
 
 public class GameActivity extends AppCompatActivity implements OnMapReadyCallback,PermissionsListener{
     private final String tag = "GameActivity";
@@ -67,6 +56,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private PermissionsManager permissionsManager;
     @SuppressWarnings("deprecation")
     private Location originLocation;
+
+    private FeatureCollection featureCollection;
+    private List<Feature> features;
+    private Marker coinMarker;
 
 
     @Override
@@ -90,8 +83,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             mapboxMap.getUiSettings().setCompassEnabled(true);
             mapboxMap.getUiSettings().setZoomControlsEnabled(true);
             enableLocationComponent();
+            createMarkers(features);
         }
-
     }
 
 
@@ -195,8 +188,34 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.d(tag, "[onStart] Recalled lastDownloadDate is '"+downloadDate+"'");
         //get geojson file
         downloadjson();
+        featureCollection = featureCollection.fromJson(json);
+        features = featureCollection.features();
+    }
 
-
+    public void createMarkers(List<Feature> features) {
+        if(features == null){
+            Log.d(tag,"[onAddingMarkers] features = null");
+        }
+        int i=0;
+        for (Feature feature: features){
+            Geometry geometry = feature.geometry();
+            Point p = (Point) geometry;
+            List<Double> coordinates = p.coordinates();
+            String currency = feature.properties().get("currency").toString();
+            String id = feature.properties().get("id").toString();
+            String value = feature.properties().get("value").toString();
+            String symbol = feature.properties().get("marker-symbol").toString();
+            String color = feature.properties().get("marker-color").toString();
+            //MarkerOptions marker =  new MarkerOptions().title(id).snippet(value)
+            //        .position(new LatLng(coordinates.get(0),coordinates.get(1)));
+            if(mapboxMap == null){
+                Log.d(tag,"[onAddingMarkers] mapboxMap = null");
+            }
+            Log.d(tag,"iteration:"+i);
+            i++;
+            coinMarker = mapboxMap.addMarker(new MarkerOptions().title(id).snippet(value)
+                    .position(new LatLng(coordinates.get(1),coordinates.get(0))));
+        }
     }
 
     @Override
