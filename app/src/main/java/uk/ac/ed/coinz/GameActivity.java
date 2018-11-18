@@ -19,6 +19,8 @@ import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Geometry;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.annotations.Icon;
+import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
@@ -35,6 +37,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Scanner;
@@ -60,6 +63,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FeatureCollection featureCollection;
     private List<Feature> features;
     private Marker coinMarker;
+    private ArrayList<Marker> markers;
 
 
     @Override
@@ -71,6 +75,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView = (MapView)findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
+        mapboxMap.setOnMarkerClickListener((MapboxMap.OnMarkerClickListener) this);
     }
 
     @Override
@@ -84,6 +89,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             mapboxMap.getUiSettings().setZoomControlsEnabled(true);
             enableLocationComponent();
             createMarkers(features);
+
         }
     }
 
@@ -192,20 +198,31 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         features = featureCollection.features();
     }
 
+    @SuppressLint("LogNotTimber")
     public void createMarkers(List<Feature> features) {
         if(features == null){
             Log.d(tag,"[onAddingMarkers] features = null");
         }
         int i=0;
+        markers = new ArrayList<Marker>();
         for (Feature feature: features){
             Geometry geometry = feature.geometry();
             Point p = (Point) geometry;
             List<Double> coordinates = p.coordinates();
             String currency = feature.properties().get("currency").toString();
+            currency = currency.substring(1,currency.length()-1);
+
             String id = feature.properties().get("id").toString();
+            id = id.substring(1,id.length()-1);
+
             String value = feature.properties().get("value").toString();
+            value = value.substring(1,value.length()-1);
+
             String symbol = feature.properties().get("marker-symbol").toString();
+            symbol = symbol.substring(1,symbol.length()-1);
+
             String color = feature.properties().get("marker-color").toString();
+            color = color.substring(1,currency.length()-1);
             //MarkerOptions marker =  new MarkerOptions().title(id).snippet(value)
             //        .position(new LatLng(coordinates.get(0),coordinates.get(1)));
             if(mapboxMap == null){
@@ -213,9 +230,42 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
             Log.d(tag,"iteration:"+i);
             i++;
-            coinMarker = mapboxMap.addMarker(new MarkerOptions().title(id).snippet(value)
-                    .position(new LatLng(coordinates.get(1),coordinates.get(0))));
+            IconFactory iconFactroy = IconFactory.getInstance(this);
+            Icon blue_icon = iconFactroy.fromResource(R.drawable.blue_marker);
+            Icon gree_icon = iconFactroy.fromResource(R.drawable.green_marker);
+            Icon purple_icon = iconFactroy.fromResource(R.drawable.purple_marker);
+            Icon yellow_icon = iconFactroy.fromResource(R.drawable.yellow_marker);
+            switch (currency){
+                case "QUID": coinMarker = mapboxMap.addMarker(new MarkerOptions().title(currency).snippet("value:"+value)
+                        .position(new LatLng(coordinates.get(1),coordinates.get(0))).icon(blue_icon));
+                    markers.add(coinMarker);
+                case "DOLR": coinMarker = mapboxMap.addMarker(new MarkerOptions().title(currency).snippet("value:"+value)
+                        .position(new LatLng(coordinates.get(1),coordinates.get(0))).icon(gree_icon));
+                    markers.add(coinMarker);
+                case "SHIL": coinMarker = mapboxMap.addMarker(new MarkerOptions().title(currency).snippet("value:"+value)
+                        .position(new LatLng(coordinates.get(1),coordinates.get(0))).icon(purple_icon));
+                    markers.add(coinMarker);
+                case "PENY": coinMarker = mapboxMap.addMarker(new MarkerOptions().title(currency).snippet("value:"+value)
+                        .position(new LatLng(coordinates.get(1),coordinates.get(0))).icon(yellow_icon));
+                    markers.add(coinMarker);
+            }
+
+
         }
+        itemizedIconOverlayGT = new ItemizedIconOverlay(activity, alMarkerGT,
+                new OnItemGestureListener<Marker>() {
+
+                    @Override
+                    public boolean onItemSingleTapUp(int index, Marker item) {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onItemLongPress(int index, Marker item) {
+                        return false;
+                    }
+                });
+        mv.addItemizedOverlay(itemizedIconOverlayGT);
     }
 
     @Override
