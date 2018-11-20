@@ -1,6 +1,7 @@
 package uk.ac.ed.coinz;
 
 import android.annotation.SuppressLint;
+import android.arch.lifecycle.Lifecycle;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,6 +15,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.mapbox.android.core.location.LocationEngine;
+import com.mapbox.android.core.location.LocationEngineListener;
+import com.mapbox.android.core.location.LocationEnginePriority;
+import com.mapbox.android.core.location.LocationEngineProvider;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.geojson.Feature;
@@ -29,9 +34,11 @@ import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.location.LocationComponent;
 import com.mapbox.mapboxsdk.location.modes.CameraMode;
+import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,7 +52,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 
-public class GameActivity extends AppCompatActivity implements OnMapReadyCallback,PermissionsListener{
+public class GameActivity extends AppCompatActivity implements OnMapReadyCallback,PermissionsListener,LocationEngineListener, View.OnClickListener {
     private final String tag = "GameActivity";
 
     Calendar calendar = Calendar.getInstance();
@@ -61,6 +68,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private PermissionsManager permissionsManager;
     @SuppressWarnings("deprecation")
     private Location originLocation;
+    private LocationEngine locationEngine;
+    private LocationLayerPlugin locationLayerPlugin;
 
     private FeatureCollection featureCollection;
     private List<Feature> features;
@@ -71,14 +80,12 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         Mapbox.getInstance(this,getString(R.string.access_token));
         setContentView(R.layout.activity_game);
         mapView = (MapView)findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
-        mapboxMap.setOnMarkerClickListener((MapboxMap.OnMarkerClickListener) this);
-        findViewById(R.id.collectButton).setOnClickListener((View.OnClickListener) this);
+        findViewById(R.id.collectButton).setOnClickListener(this);
     }
 
     public void onClick(View view){
@@ -109,6 +116,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             String color = feature.properties().get("marker-color").toString();
             color = color.substring(1, currency.length() - 1);
 
+
+
             Location markerLoc = new Location("");
             markerLoc.setLatitude(coordinates.get(1));
             markerLoc.setLongitude(coordinates.get(0));
@@ -133,8 +142,49 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             mapboxMap.getUiSettings().setZoomControlsEnabled(true);
             enableLocationComponent();
             createMarkers(features);
+            enableLocation();
 
         }
+    }
+
+    private void enableLocation(){
+        if(PermissionsManager.areLocationPermissionsGranted(this)){
+            initializeLocationEngine();
+            //initializeLacationLayer();
+        }
+        else {
+            Log.d(tag,"Permissions are not granted");
+            permissionsManager = new PermissionsManager(this);
+            permissionsManager.requestLocationPermissions(this);
+        }
+    }
+
+    private void initializeLocationEngine(){
+        locationEngine = new LocationEngineProvider(this).obtainBestLocationEngineAvailable();
+        locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
+        locationEngine.activate();
+        @SuppressLint("MissingPermission")
+        Location lastLocation = locationEngine.getLastLocation();
+        if(lastLocation != null){
+            originLocation = lastLocation;
+            setCameraPosition(lastLocation);
+        }else{
+            locationEngine.addLocationEngineListener(this);
+        }
+    }
+
+    private void initializeLacationLayer() {
+        locationLayerPlugin = new LocationLayerPlugin(mapView,mapboxMap,locationEngine);
+        locationLayerPlugin.setLocationLayerEnabled(true);
+        locationLayerPlugin.setCameraMode(CameraMode.TRACKING);
+        locationLayerPlugin.setRenderMode(RenderMode.COMPASS);
+        Lifecycle lifecycle = getLifecycle();
+        lifecycle.addObserver(locationLayerPlugin);
+    }
+
+    private void setCameraPosition(Location location){
+        mapboxMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude()
+                ,location.getLongitude()),13.0));
     }
 
 
@@ -233,6 +283,14 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         downloadjson();
         featureCollection = featureCollection.fromJson(json);
         features = featureCollection.features();
+
+        if(locationEngine != null){
+            try{
+                locationEngine.requestLocationUpdates();
+            }catch (SecurityException ignored){}
+            locationEngine.addLocationEngineListener(this);
+        }
+
     }
 
     @SuppressLint("LogNotTimber")
@@ -320,6 +378,12 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         SharedPreferences.Editor editor2 = settings.edit();
         editor2.putString("json",json);
         editor2.apply();
+
+        if(locationEngine != null){
+            locationEngine.removeLocationUpdates();
+            locationEngine.removeLocationEngineListener(this);
+
+        }
     }
 
     @Override
@@ -338,6 +402,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
+        if(locationEngine != null){
+            locationEngine.deactivate();
+        }
     }
 
     void downloadComplete(String result){
@@ -347,8 +414,24 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
 
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
 
+    }
 
+    @SuppressLint("MissingPermission")
+    @Override
+    public void onConnected() {
+        locationEngine.requestLocationUpdates();
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        if(location != null){
+            originLocation = location;
+            setCameraPosition(location);
+        }
+    }
 
 
     @SuppressLint("StaticFieldLeak")
