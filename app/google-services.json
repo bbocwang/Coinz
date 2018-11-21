@@ -1,0 +1,63 @@
+{
+  "project_info": {
+    "project_number": "25902564104",
+    "firebase_url": "https://coinz-4de74.firebaseio.com",
+    "project_id": "coinz-4de74",
+    "storage_bucket": "coinz-4de74.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:25902564104:android:88769ac41d3337cb",
+        "android_client_info": {
+          "package_name": "uk.ac.ed.coinz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "25902564104-7ab8pdblb0u6od9kfveb216mjqtvjsfs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uk.ac.ed.coinz",
+            "certificate_hash": "77d5a8c2cac890e816c60d53f26382bc55d3301d"
+          }
+        },
+        {
+          "client_id": "25902564104-j7gdobtfiohltui14po1lem5rp1hafl8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uk.ac.ed.coinz",
+            "certificate_hash": "4a8dc8431bfb9a0e540a8504468eb92d9a400150"
+          }
+        },
+        {
+          "client_id": "25902564104-hvfoiupp14dtips3l5gbrnu922rf9fh1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwtY65S3XB0vm4HrW-ShobgyujLenKjms"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "25902564104-hvfoiupp14dtips3l5gbrnu922rf9fh1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -15,11 +15,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.auth.User;
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineListener;
 import com.mapbox.android.core.location.LocationEnginePriority;
@@ -83,6 +86,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private FirebaseDatabase database;
     private DatabaseReference coinsRef;
+    private FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
 
 
@@ -114,6 +118,12 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Write a message to the database
         database = FirebaseDatabase.getInstance();
         coinsRef = database.getReference("coins");
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if(currentUser != null){
+            Log.d(tag,"[got current user!]"+currentUser.getEmail().toString());
+        }else{
+            Log.d(tag,"[current use is null!!]");
+        }
         coinsRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
