@@ -15,6 +15,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineListener;
 import com.mapbox.android.core.location.LocationEnginePriority;
@@ -76,6 +81,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Marker coinMarker;
     private ArrayList<Marker> markers;
 
+    private FirebaseDatabase database;
+    private DatabaseReference coinsRef;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,17 +95,45 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
         findViewById(R.id.collectButton).setOnClickListener(this);
+        findViewById(R.id.wallet).setOnClickListener(this);
+        connectDatabase();
     }
+
 
     public void onClick(View view){
         switch (view.getId()){
             case R.id.collectButton:
                 collect();
                 break;
+            case R.id.wallet:
+                startActivity(new Intent(this,WalletActivity.class));
         }
     }
 
+    private void connectDatabase() {
+        // Write a message to the database
+        database = FirebaseDatabase.getInstance();
+        coinsRef = database.getReference("coins");
+        coinsRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+                String value = dataSnapshot.getValue(String.class);
+                Log.d(tag, "Value is: " + value);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.w(tag, "Failed to read value.", error.toException());
+            }
+        });
+    }
+
     private void collect() {
+        boolean result = false;
+        Log.d(tag,"[size of features]:"+features.size());
         for (Feature feature : features) {
             Geometry geometry = feature.geometry();
             Point p = (Point) geometry;
@@ -124,10 +161,16 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             float distanceInMeters = originLocation.distanceTo(markerLoc);
             if(distanceInMeters <= 20){
-                Log.d(tag,"get coin"+currency+value+"current location"+originLocation.toString());
-            }else{
-                Log.d(tag,"no coins in 20m"+"current location"+originLocation.toString());
+                Log.d(tag,"[get coin!]"+currency+value+"current location"+originLocation.toString());
+                Toast.makeText(this,"You Got a Coin!",Toast.LENGTH_LONG).show();
+                Coin coin = new Coin(id,value,currency);
+                coinsRef.child(id).setValue(coin);
+                result = true;
             }
+        }
+        if(result == false){
+            Log.d(tag,"No coins around you");
+            Toast.makeText(this,"No coins around you! try to walk around",Toast.LENGTH_LONG).show();
         }
     }
 

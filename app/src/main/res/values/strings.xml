@@ -18,4 +18,8 @@
     <string name="name">Name</string>
     <string name="user_location_permission_explanation" />
     <string name="user_location_permission_not_granted" />
+
+    <string name="title_activity_wallet">WalletActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>

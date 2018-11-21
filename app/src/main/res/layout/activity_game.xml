@@ -21,7 +21,7 @@
         mapbox:mapbox_cameraZoom="15"
         />
 
-    <android.support.design.widget.FloatingActionButton
+    <ImageView
         android:id="@+id/collectButton"
         android:layout_width="40dp"
         android:layout_height="40dp"
@@ -32,14 +32,28 @@
         android:clickable="true"
         android:visibility="visible"
         app:srcCompat="@drawable/coin3"
-        mapbox:backgroundTint="@color/colorPrimary"
         mapbox:layout_constraintBottom_toBottomOf="parent"
         mapbox:layout_constraintEnd_toEndOf="parent"
-        mapbox:layout_constraintHorizontal_bias="0.917"
+        mapbox:layout_constraintHorizontal_bias="0.918"
         mapbox:layout_constraintStart_toStartOf="parent"
         mapbox:layout_constraintTop_toTopOf="parent"
-        mapbox:layout_constraintVertical_bias="0.9"
-        mapbox:rippleColor="@color/colorPrimaryDark" />
+        mapbox:layout_constraintVertical_bias="0.736" />
+
+    <ImageView
+        android:id="@+id/wallet"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        app:srcCompat="@drawable/wallet"
+        mapbox:layout_constraintBottom_toBottomOf="parent"
+        mapbox:layout_constraintEnd_toEndOf="parent"
+        mapbox:layout_constraintHorizontal_bias="0.931"
+        mapbox:layout_constraintStart_toStartOf="parent"
+        mapbox:layout_constraintTop_toTopOf="parent"
+        mapbox:layout_constraintVertical_bias="0.854" />
 
 
 </android.support.constraint.ConstraintLayout>
