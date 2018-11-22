@@ -87,7 +87,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseDatabase database;
     private DatabaseReference coinsRef;
     private FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-
+    private List<Coin> coinsInWallet;
 
 
     @Override
@@ -134,8 +134,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
-                String value = dataSnapshot.getValue(String.class);
-                Log.d(tag, "Value is: " + value);
+                coinsInWallet = (List<Coin>) dataSnapshot.getValue();
+                Log.d(tag, "[Realtime Database] Wallet updated" );
             }
 
             @Override
@@ -179,7 +179,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log.d(tag,"[get coin!]"+currency+value+"current location"+originLocation.toString());
                 Toast.makeText(this,"You Got a Coin!",Toast.LENGTH_LONG).show();
                 Coin coin = new Coin(id,value,currency);
-                coinsRef.child(id).setValue(coin);
+                coinsRef.child("wallet").setValue(coin);
                 result = true;
             }
         }
