@@ -116,13 +116,18 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void connectDatabase() {
         // Write a message to the database
-        database = FirebaseDatabase.getInstance();
-        coinsRef = database.getReference("coins");
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        database = FirebaseDatabase.getInstance();
+        coinsRef = database.getReference("users").child(currentUser.getUid());
         if(currentUser != null){
             Log.d(tag,"[got current user!]"+currentUser.getEmail().toString());
         }else{
             Log.d(tag,"[current use is null!!]");
+        }
+        if(coinsRef != null){
+            Log.d(tag,"[Conected to the database!]"+currentUser.getEmail().toString());
+        }else{
+            Log.d(tag,"[database ref is null!!]");
         }
         coinsRef.addValueEventListener(new ValueEventListener() {
             @Override
