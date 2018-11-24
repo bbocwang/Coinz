@@ -22,7 +22,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.firestore.auth.User;
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineListener;
 import com.mapbox.android.core.location.LocationEnginePriority;
@@ -56,7 +55,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 
@@ -85,9 +86,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ArrayList<Marker> markers;
 
     private FirebaseDatabase database;
-    private DatabaseReference coinsRef;
+    private DatabaseReference userAccountRef;
     private FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-    private List<Coin> coinsInWallet;
+    private HashMap coinsInWallet;
+    private List<Coin> coinList;
 
 
     @Override
@@ -95,6 +97,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         Mapbox.getInstance(this,getString(R.string.access_token));
         setContentView(R.layout.activity_game);
+        coinList = new ArrayList<>();
         mapView = (MapView)findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
@@ -118,23 +121,54 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Write a message to the database
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         database = FirebaseDatabase.getInstance();
-        coinsRef = database.getReference("users").child(currentUser.getUid());
+        userAccountRef = database.getReference("users").child(currentUser.getUid());
         if(currentUser != null){
             Log.d(tag,"[got current user!]"+currentUser.getEmail().toString());
         }else{
             Log.d(tag,"[current use is null!!]");
         }
-        if(coinsRef != null){
+        if(userAccountRef != null){
             Log.d(tag,"[Conected to the database!]"+currentUser.getEmail().toString());
         }else{
             Log.d(tag,"[database ref is null!!]");
         }
-        coinsRef.addValueEventListener(new ValueEventListener() {
+        userAccountRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
-                coinsInWallet = (List<Coin>) dataSnapshot.getValue();
+                if (dataSnapshot.getValue() != null){
+                    Log.d(tag, "[getValue]" +dataSnapshot.getValue().toString());
+                    Log.d(tag, "[getChildren]" +dataSnapshot.getChildren().toString());
+                    Log.d(tag, "[getChildrenClass]" +dataSnapshot.getChildren().getClass().toString());
+                }
+                coinList.clear();
+                for(DataSnapshot coinsSnapshot: dataSnapshot.getChildren()){
+                    coinList.clear();
+                    Map<String,Map<String,Object>> map = (Map<String, Map<String, Object>>) coinsSnapshot.getValue();
+                    for(Map<String,Object> submap: map.values())
+                    {
+                        String currency = (String) submap.get("currency");
+                        String id = (String) submap.get("id");
+                        Double  value = (Double) submap.get("value");
+
+                        Coin coin = new Coin(id,value,currency);
+                        coinList.add(coin);
+                    }
+                    Log.d(tag,"[coinList value]:"+coinList.toString());
+
+                }
+
+                //for(Coin i: coinList){
+                    //Log.d(tag,"[In the coinList class]:"+i.getClass().toString());
+                    //Log.d(tag,"[In the coinList]:"+i.toString());
+                    //Log.d(tag, String.format("[coin value]:%s", i.getValue()));
+                    //Log.d(tag, String.format("[coin currency]:%s", i.getCurrency()));
+                    //Log.d(tag, String.format("[coin id]:%s", i.getId()));
+                    //Log.d(tag, String.format("[the size of coinList:%d", coinList.size()));
+                //}
+
+
                 Log.d(tag, "[Realtime Database] Wallet updated" );
             }
 
@@ -147,8 +181,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void collect() {
-        boolean result = false;
         Log.d(tag,"[size of features]:"+features.size());
+        boolean result = false;
+        Feature foundfeature = null;
         for (Feature feature : features) {
             Geometry geometry = feature.geometry();
             Point p = (Point) geometry;
@@ -175,13 +210,29 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             markerLoc.setLongitude(coordinates.get(0));
 
             float distanceInMeters = originLocation.distanceTo(markerLoc);
-            if(distanceInMeters <= 20){
-                Log.d(tag,"[get coin!]"+currency+value+"current location"+originLocation.toString());
-                Toast.makeText(this,"You Got a Coin!",Toast.LENGTH_LONG).show();
-                Coin coin = new Coin(id,value,currency);
-                coinsRef.child("wallet").setValue(coin);
-                result = true;
+            if(distanceInMeters <= 25){
+                Boolean repetition = false;
+                for(Coin c:coinList){
+                    if(c.getId() == id){
+                        repetition = true;
+                        Toast.makeText(this,"You have already collected this coin!",Toast.LENGTH_LONG).show();
+                    }
+                }
+                if(repetition == false)
+                {
+                    Log.d(tag,"[get coin!]"+currency+value+"current location"+originLocation.toString());
+                    Toast.makeText(this,"You Got a Coin!",Toast.LENGTH_LONG).show();
+                    Coin coin = new Coin(id,value,currency);
+                    userAccountRef.child("wallet").child(id).setValue(coin);
+                    result = true;
+                    foundfeature = feature;
+                }
             }
+        }
+        if(foundfeature != null) {
+            features.remove(foundfeature);
+            mapboxMap.clear();
+            createMarkers(features);
         }
         if(result == false){
             Log.d(tag,"No coins around you");
@@ -242,7 +293,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void setCameraPosition(Location location){
         mapboxMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude()
-                ,location.getLongitude()),13.0));
+                ,location.getLongitude()),15.0));
     }
 
 
@@ -357,6 +408,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.d(tag,"[onAddingMarkers] features = null");
         }
         int i=0;
+        Log.d(tag,"[onCreateMarkers] Creating Markers");
         markers = new ArrayList<Marker>();
         for (Feature feature: features){
             Geometry geometry = feature.geometry();
@@ -381,7 +433,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             if(mapboxMap == null){
                 Log.d(tag,"[onAddingMarkers] mapboxMap = null");
             }
-            Log.d(tag,"iteration:"+i);
             i++;
             IconFactory iconFactroy = IconFactory.getInstance(this);
             Icon blue_icon = iconFactroy.fromResource(R.drawable.blue_marker);
@@ -428,9 +479,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         editor.putString("lastDownloadDate",downloadDate);
         editor.apply();
 
-
         //storing json file of current day
-        Log.d(tag,"[onStop] Storing json file"+json);
+        Log.d(tag,"[onStop] Storing json file");
         SharedPreferences settings2 = getSharedPreferences(preferencesFile,
                 Context.MODE_PRIVATE);
         SharedPreferences.Editor editor2 = settings.edit();

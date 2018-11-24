@@ -5,17 +5,13 @@ public class Coin {
     private double value;
     private String currency;
 
-    public Coin(String id, double value, String currency) {
-        this.id = id;
-        this.value = value;
-        this.currency = currency;
-    }
-
     public Coin(String id, String value, String currency) {
         this.id = id;
         this.value = Double.parseDouble(value);
         this.currency = currency;
     }
+
+    public Coin(String id, Double value, String currency){}
 
     public String getId() {
         return id;
