@@ -242,6 +242,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             markerLoc.setLatitude(coordinates.get(1));
             markerLoc.setLongitude(coordinates.get(0));
 
+
             float distanceInMeters = originLocation.distanceTo(markerLoc);
             if(distanceInMeters <= 25){
                 Boolean repetition = false;
