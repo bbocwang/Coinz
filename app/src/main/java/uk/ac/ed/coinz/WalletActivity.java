@@ -23,6 +23,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 import timber.log.Timber;
 
@@ -54,20 +55,59 @@ public class WalletActivity extends AppCompatActivity {
     }
 
     private void getCoinInformation() {
-        coinList.clear();
-        for(DataSnapshot coinsSnapshot: dataSnapshot.getChildren()){
-            coinList.clear();
-            Map<String,Map<String,Object>> map = (Map<String, Map<String, Object>>) coinsSnapshot.getValue();
-            for(Map<String,Object> submap: map.values())
-            {
-                String currency = (String) submap.get("currency");
-                String id = (String) submap.get("id");
-                Double  value = (Double) submap.get("value");
+        CountDownLatch done = new CountDownLatch(1);
+        walletRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+                if (dataSnapshot.getValue() != null){
+                    Log.d(tag, "[getValue]" +dataSnapshot.getValue().toString());
+                    Log.d(tag, "[getChildren]" +dataSnapshot.getChildren().toString());
+                    Log.d(tag, "[getChildrenClass]" +dataSnapshot.getChildren().getClass().toString());
+                }
+                coinList.clear();
+                for(DataSnapshot coinsSnapshot: dataSnapshot.getChildren()){
+                    coinList.clear();
+                    Map<String,Map<String,Object>> map = (Map<String, Map<String, Object>>) coinsSnapshot.getValue();
+                    for(Map<String,Object> submap: map.values())
+                    {
+                        String currency = (String) submap.get("currency");
+                        String id = (String) submap.get("id");
+                        Double  value = (Double) submap.get("value");
 
-                Coin coin = new Coin(id,value,currency);
-                coinList.add(coin);
+                        Coin coin = new Coin(id,value,currency);
+                        coinList.add(coin);
+                    }
+                    Log.d(tag,"[coinList value]:"+coinList.toString());
+
+                }
+
+                //for(Coin i: coinList){
+                //Log.d(tag,"[In the coinList class]:"+i.getClass().toString());
+                //Log.d(tag,"[In the coinList]:"+i.toString());
+                //Log.d(tag, String.format("[coin value]:%s", i.getValue()));
+                //Log.d(tag, String.format("[coin currency]:%s", i.getCurrency()));
+                //Log.d(tag, String.format("[coin id]:%s", i.getId()));
+                //Log.d(tag, String.format("[the size of coinList:%d", coinList.size()));
+                //}
+
+
+                Log.d(tag, "[Realtime Database] Wallet updated" );
+                done.countDown();
             }
-            Log.d(tag,"[coinList size2]:" + coinList.size());
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.w(tag, "Failed to read value.", error.toException());
+            }
+        });
+        try {
+            done.await(); //it will wait till the response is received from firebase.
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -99,6 +139,7 @@ public class WalletActivity extends AppCompatActivity {
 
             }
         });
+
         Log.d(tag,"[coinList size3]:" + coinList.size());
     }
 

@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -46,6 +47,7 @@ import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
+import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,7 +61,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GameActivity extends AppCompatActivity implements OnMapReadyCallback,PermissionsListener,LocationEngineListener, View.OnClickListener {
     private final String tag = "GameActivity";
@@ -90,7 +95,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
     private HashMap coinsInWallet;
     private List<Coin> coinList;
+    private List<String> coinIdList;
+    private Set<String > stringSet;
 
+    SharedPreferences usercoins;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,7 +111,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView.getMapAsync(this);
         findViewById(R.id.collectButton).setOnClickListener(this);
         findViewById(R.id.wallet).setOnClickListener(this);
-        connectDatabase();
     }
 
 
@@ -119,6 +126,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void connectDatabase() {
         // Write a message to the database
+        final AtomicBoolean done = new AtomicBoolean(false);
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         database = FirebaseDatabase.getInstance();
         userAccountRef = database.getReference("users").child(currentUser.getUid());
@@ -132,6 +140,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         }else{
             Log.d(tag,"[database ref is null!!]");
         }
+
         userAccountRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -143,6 +152,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                     Log.d(tag, "[getChildrenClass]" +dataSnapshot.getChildren().getClass().toString());
                 }
                 coinList.clear();
+                List<Feature> repetition = new ArrayList<Feature>();
                 for(DataSnapshot coinsSnapshot: dataSnapshot.getChildren()){
                     coinList.clear();
                     Map<String,Map<String,Object>> map = (Map<String, Map<String, Object>>) coinsSnapshot.getValue();
@@ -154,8 +164,21 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                         Coin coin = new Coin(id,value,currency);
                         coinList.add(coin);
+
+                        for(Feature feature:features){
+                            String featureid = feature.properties().get("id").toString();
+                            featureid = featureid.substring(1,featureid.length()-1);
+                            if(featureid == id){
+                                repetition.add(feature);
+                            }
+                        }
                     }
-                    Log.d(tag,"[coinList value]:"+coinList.toString());
+                    if(repetition != null){
+                        for(Feature feature:repetition){
+                            features.remove(feature);
+                        }
+                    }
+                    Log.d(tag,"[!!!!coinList value]:"+coinList.toString());
 
                 }
 
@@ -168,7 +191,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                     //Log.d(tag, String.format("[the size of coinList:%d", coinList.size()));
                 //}
 
-
+                done.set(true);
                 Log.d(tag, "[Realtime Database] Wallet updated" );
             }
 
@@ -178,6 +201,16 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log.w(tag, "Failed to read value.", error.toException());
             }
         });
+        while(!done.get());
+
+        createMarkers(features);
+    }
+
+    public void updateIdList(){
+        coinIdList.clear();
+        for(Coin coin:coinList){
+            coinIdList.add(coin.getId());
+        }
     }
 
     private void collect() {
@@ -250,9 +283,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             mapboxMap.getUiSettings().setCompassEnabled(true);
             mapboxMap.getUiSettings().setZoomControlsEnabled(true);
             enableLocationComponent();
-            createMarkers(features);
             enableLocation();
-
+            connectDatabase();
         }
     }
 
@@ -410,7 +442,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         int i=0;
         Log.d(tag,"[onCreateMarkers] Creating Markers");
         markers = new ArrayList<Marker>();
+        List<Feature> alreadyHaveList = new ArrayList<Feature>();
         for (Feature feature: features){
+            Boolean alreadyHave = false;
             Geometry geometry = feature.geometry();
             Point p = (Point) geometry;
             List<Double> coordinates = p.coordinates();
@@ -433,26 +467,37 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             if(mapboxMap == null){
                 Log.d(tag,"[onAddingMarkers] mapboxMap = null");
             }
-            i++;
-            IconFactory iconFactroy = IconFactory.getInstance(this);
-            Icon blue_icon = iconFactroy.fromResource(R.drawable.blue_marker);
-            Icon gree_icon = iconFactroy.fromResource(R.drawable.green_marker);
-            Icon purple_icon = iconFactroy.fromResource(R.drawable.purple_marker);
-            Icon yellow_icon = iconFactroy.fromResource(R.drawable.yellow_marker);
-            switch (currency){
-                case "QUID": coinMarker = mapboxMap.addMarker(new MarkerOptions().title(currency).snippet("value:"+value)
-                        .position(new LatLng(coordinates.get(1),coordinates.get(0))).icon(blue_icon));
-                    markers.add(coinMarker);
-                case "DOLR": coinMarker = mapboxMap.addMarker(new MarkerOptions().title(currency).snippet("value:"+value)
-                        .position(new LatLng(coordinates.get(1),coordinates.get(0))).icon(gree_icon));
-                    markers.add(coinMarker);
-                case "SHIL": coinMarker = mapboxMap.addMarker(new MarkerOptions().title(currency).snippet("value:"+value)
-                        .position(new LatLng(coordinates.get(1),coordinates.get(0))).icon(purple_icon));
-                    markers.add(coinMarker);
-                case "PENY": coinMarker = mapboxMap.addMarker(new MarkerOptions().title(currency).snippet("value:"+value)
-                        .position(new LatLng(coordinates.get(1),coordinates.get(0))).icon(yellow_icon));
-                    markers.add(coinMarker);
+            if(coinList.contains(id)){
+                alreadyHaveList.add(feature);
+                Log.d(tag,"[onAddingMarkers] !!repetition marker, id="+id);
+            }else{
+                Log.d(tag,"[onAddingMarkers] no repetition marker, id="+id);
+                i++;
+                IconFactory iconFactroy = IconFactory.getInstance(this);
+                Icon blue_icon = iconFactroy.fromResource(R.drawable.blue_marker);
+                Icon gree_icon = iconFactroy.fromResource(R.drawable.green_marker);
+                Icon purple_icon = iconFactroy.fromResource(R.drawable.purple_marker);
+                Icon yellow_icon = iconFactroy.fromResource(R.drawable.yellow_marker);
+                switch (currency){
+                    case "QUID": coinMarker = mapboxMap.addMarker(new MarkerOptions().title(currency).snippet("value:"+value)
+                            .position(new LatLng(coordinates.get(1),coordinates.get(0))).icon(blue_icon));
+                        markers.add(coinMarker);
+                    case "DOLR": coinMarker = mapboxMap.addMarker(new MarkerOptions().title(currency).snippet("value:"+value)
+                            .position(new LatLng(coordinates.get(1),coordinates.get(0))).icon(gree_icon));
+                        markers.add(coinMarker);
+                    case "SHIL": coinMarker = mapboxMap.addMarker(new MarkerOptions().title(currency).snippet("value:"+value)
+                            .position(new LatLng(coordinates.get(1),coordinates.get(0))).icon(purple_icon));
+                        markers.add(coinMarker);
+                    case "PENY": coinMarker = mapboxMap.addMarker(new MarkerOptions().title(currency).snippet("value:"+value)
+                            .position(new LatLng(coordinates.get(1),coordinates.get(0))).icon(yellow_icon));
+                        markers.add(coinMarker);
+                }
             }
+
+
+        }
+        for(Feature feature:alreadyHaveList){
+            features.remove(feature);
         }
     }
 
