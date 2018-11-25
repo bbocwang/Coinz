@@ -2,12 +2,14 @@ package uk.ac.ed.coinz;
 
 import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -23,39 +25,64 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-
-import timber.log.Timber;
 
 public class WalletActivity extends AppCompatActivity {
     private final String tag = "WalletActivity";
+
 
     private DatabaseReference walletRef;
     private FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
     private FirebaseDatabase database;
     private List<Coin> coinList;
+    //private ListView listView;
 
     @SuppressLint("LogNotTimber")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wallet);
+        //listView = (ListView) findViewById(R.id.coin_list_view);
         walletRef = FirebaseDatabase.getInstance().getReference();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         database = FirebaseDatabase.getInstance();
         walletRef = database.getReference("users").child(currentUser.getUid());
         coinList = new ArrayList<>();
-        getCoinInformation();
+        //getCoinInformation();
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        bottomNavigationView.setOnNavigationItemSelectedListener(navListener);
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                new WalletFragment()).commit();
 
 
-        ListView listViewCoins = (ListView) findViewById(R.id.listViewCoins);
-        CustomAdapter customAdapter = new CustomAdapter();
-        listViewCoins.setAdapter(customAdapter);
+
         Log.d(tag,"[coinList size1]:" + coinList.size());
     }
 
-    private void getCoinInformation() {
-        CountDownLatch done = new CountDownLatch(1);
+    private BottomNavigationView.OnNavigationItemSelectedListener navListener =
+            new BottomNavigationView.OnNavigationItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                    Fragment selectedFragment = null;
+
+                    switch (menuItem.getItemId()){
+                        case R.id.nav_wallet:
+                            selectedFragment = new WalletFragment();
+                            break;
+                        case R.id.nav_mail:
+                            selectedFragment = new TransferFragment();
+                            break;
+                        case R.id.nav_bank:
+                            selectedFragment = new BankFragment();
+                            break;
+                    }
+                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                            selectedFragment).commit();
+                    return true;
+                }
+            };
+
+    /*private void getCoinInformation() {
+
         walletRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -83,18 +110,7 @@ public class WalletActivity extends AppCompatActivity {
 
                 }
 
-                //for(Coin i: coinList){
-                //Log.d(tag,"[In the coinList class]:"+i.getClass().toString());
-                //Log.d(tag,"[In the coinList]:"+i.toString());
-                //Log.d(tag, String.format("[coin value]:%s", i.getValue()));
-                //Log.d(tag, String.format("[coin currency]:%s", i.getCurrency()));
-                //Log.d(tag, String.format("[coin id]:%s", i.getId()));
-                //Log.d(tag, String.format("[the size of coinList:%d", coinList.size()));
-                //}
-
-
                 Log.d(tag, "[Realtime Database] Wallet updated" );
-                done.countDown();
             }
 
             @Override
@@ -103,14 +119,9 @@ public class WalletActivity extends AppCompatActivity {
                 Log.w(tag, "Failed to read value.", error.toException());
             }
         });
-        try {
-            done.await(); //it will wait till the response is received from firebase.
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+    }*/
 
-    @Override
+    /*@Override
     protected void onStart() {
         super.onStart();
         walletRef.addValueEventListener(new ValueEventListener() {
@@ -132,6 +143,8 @@ public class WalletActivity extends AppCompatActivity {
                     Log.d(tag,"[coinList size2]:" + coinList.size());
 
                 }
+                //CoinsAdapter coinsAdapter = new CoinsAdapter(WalletActivity.this,coinList);
+                //listView.setAdapter(coinsAdapter);
             }
 
             @Override
@@ -141,35 +154,7 @@ public class WalletActivity extends AppCompatActivity {
         });
 
         Log.d(tag,"[coinList size3]:" + coinList.size());
-    }
+    }*/
 
-    class CustomAdapter extends BaseAdapter{
 
-        @Override
-        public int getCount() {
-            return coinList.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return null;
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return 0;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            convertView = getLayoutInflater().inflate(R.layout.customlayout,null);
-            ImageView imageView = (ImageView)convertView.findViewById(R.id.imageViewCoinicon);
-            TextView textView_currency = (TextView) convertView.findViewById(R.id.textView_currency);
-            TextView textView_value = (TextView) convertView.findViewById(R.id.textView_value);
-            imageView.setImageResource(R.drawable.pound_icon);
-            textView_currency.setText(coinList.get(position).getCurrency());
-            textView_value.setText(coinList.get(position).getCurrency());
-            return convertView;
-        }
-    }
 }

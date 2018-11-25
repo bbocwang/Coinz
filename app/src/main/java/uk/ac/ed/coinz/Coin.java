@@ -11,7 +11,11 @@ public class Coin {
         this.currency = currency;
     }
 
-    public Coin(String id, Double value, String currency){}
+    public Coin(String id, Double value, String currency){
+        this.id = id;
+        this.value = value;
+        this.currency = currency;
+    }
 
     public String getId() {
         return id;

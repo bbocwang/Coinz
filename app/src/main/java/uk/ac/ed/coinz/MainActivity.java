@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         loginUsername = (EditText) findViewById(R.id.LoginUsername);
         loginPassword = (EditText) findViewById(R.id.LoginPassword);
         progressBar = (ProgressBar) findViewById(R.id.progressbar0);
+
     }
 
     private void login() {
@@ -119,7 +120,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         }
     }
 
-    private void connectDatabase(FirebaseUser currentUser) {
+    /*private void connectDatabase(FirebaseUser currentUser) {
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference userAccountRef = database.getReference("users").child(currentUser.getUid());
@@ -185,6 +186,6 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         editor.putStringSet(stringcoins, (Set<String>) coinList);
         editor.apply();
 
-    }
+    }*/
 
 }
