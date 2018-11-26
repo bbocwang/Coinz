@@ -182,6 +182,7 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
                     bankList.clear();
                 }
                 for(DataSnapshot userSnapshot: dataSnapshot.getChildren()){
+                    Log.d(tag,"[Getting bankinfo] bankList size:"+userSnapshot.toString());
                     BankAccount bankAccount = userSnapshot.getValue(BankAccount.class);
                     bankList.add(bankAccount);
                 }
@@ -189,7 +190,10 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
 
                 List<String> bankinfo = new ArrayList<>();
                 for(BankAccount b:bankList){
-                    bankinfo.add(b.getEmail()+": gold"+b.getGold());
+                    DecimalFormat df = new DecimalFormat("#.##");
+                    Double value = b.getGold();
+                    value = Double.valueOf(df.format(value));
+                    bankinfo.add("   "+b.getEmail()+":  "+value+"  gold");
                 }
 
                 if(getActivity() != null){
