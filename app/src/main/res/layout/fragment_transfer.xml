@@ -3,51 +3,53 @@
     xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/textViewTransfer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Transfer Fragment"
-        android:textSize="30sp" />
-
     <Spinner
         android:id="@+id/spinner_transfer"
         android:layout_width="190dp"
         android:layout_height="64dp"
-        android:layout_above="@+id/receiverEmail"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="-135dp" />
-
-    <EditText
-        android:id="@+id/receiverEmail"
-        android:layout_width="190dp"
-        android:layout_height="64dp"
-        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="70dp"
-        android:ems="10"
-        android:hint="Receiver Email"
-        android:inputType="textEmailAddress" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="200dp" />
 
     <EditText
         android:id="@+id/transferNote"
         android:layout_width="match_parent"
         android:layout_height="107dp"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="215dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="150dp"
         android:ems="10"
         android:hint="Transfer Note"
         android:inputType="text"
         android:singleLine="false" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/transferButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="107dp"
-        android:text="Button" />
+        android:layout_marginBottom="57dp"
+        android:text="Transfer" />
+
+    <Spinner
+        android:id="@+id/receiverSpinner"
+        android:layout_width="260dp"
+        android:layout_height="64dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="75dp" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="21dp"
+        android:text="Select Receiver and Coin"
+        android:textColor="@color/design_default_color_primary_dark"
+        android:textSize="20sp"
+        android:textStyle="bold" />
 
 </RelativeLayout>

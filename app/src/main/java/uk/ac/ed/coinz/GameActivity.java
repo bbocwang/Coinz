@@ -47,6 +47,9 @@ import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -91,6 +94,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
     private HashMap coinsInWallet;
     public List<Coin> coinList;
+    private List<User> userList;
 
 
     @Override
@@ -99,12 +103,71 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         Mapbox.getInstance(this,getString(R.string.access_token));
         setContentView(R.layout.activity_game);
         coinList = new ArrayList<>();
+        userList = new ArrayList<>();
         mapView = (MapView)findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
         findViewById(R.id.collectButton).setOnClickListener(this);
         findViewById(R.id.wallet).setOnClickListener(this);
         connectDatabase();
+        updateUserinfo();
+    }
+
+    private void updateUserinfo() {
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        database = FirebaseDatabase.getInstance();
+        DatabaseReference userinfoRef = database.getReference("userinfo").child("user");
+        if(currentUser != null){
+            Log.d(tag,"[OnconnectDatabase]current user:"+currentUser.getEmail().toString());
+        }else{
+            Log.d(tag,"[OnconnectDatabase]current user is null!");
+        }
+        if(userinfoRef != null){
+            Log.d(tag,"[OnconnectDatabase]Conected to the database!"+currentUser.getEmail().toString());
+        }else{
+            Log.d(tag,"[OnDataChange] database ref is null");
+        }
+        userinfoRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                userList.clear();
+                for(DataSnapshot userSnapshot: dataSnapshot.getChildren()){
+
+                    Log.d(tag,"[Getting userinfo1]"+userSnapshot.toString());
+                    //Map<String,String> map = (Map<String, String>) userSnapshot.getValue();
+                    /*for(Map<String,String> submap: map.)
+                    {
+                        String email = (String) submap.get("email");
+                        String id = (String) submap.get("uid");
+                        User user = new User(email,id);
+                        userList.add(user);
+                        Log.d(tag,"[Getting userinfo]:"+email);
+                    }*/
+                    User user = userSnapshot.getValue(User.class);
+                    userList.add(user);
+                    Log.d(tag,"[Getting userinfo2]"+user.getEmail());
+                }
+                if(userList != null){
+                    if(userList.contains(new User(currentUser.getEmail(),currentUser.getUid()))){
+
+                    }else{
+                        //add current user to the userinfo database
+                        User user = new User(currentUser.getEmail(),currentUser.getUid());
+                        userinfoRef.child(currentUser.getUid()).setValue(user);
+                    }
+
+                }
+                Log.d(tag,"[!!!!!Getting userinfo2]"+userList.size());
+                for(User u:userList){
+                    Log.d(tag,"[!!!!!Getting userinfo2]"+u.getEmail());
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
 
@@ -377,9 +440,15 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         downloadDate = settings.getString("lastDownloadDate","");
         Log.d(tag, "[onStart] Recalled lastDownloadDate is '"+downloadDate+"'");
         //get geojson file
+
+
         downloadjson();
         featureCollection = featureCollection.fromJson(json);
         features = featureCollection.features();
+
+
+
+
 
         if(locationEngine != null){
             try{
@@ -435,7 +504,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 alreadyHaveList.add(feature);
                 Log.d(tag,"[onAddingMarkers] !!repetition marker, id="+id);
             }else {
-                Log.d(tag, "[onAddingMarkers] no repetition marker, id=" + id);
                 i++;
                 IconFactory iconFactroy = IconFactory.getInstance(this);
                 Icon blue_icon = iconFactroy.fromResource(R.drawable.blue_marker);
@@ -529,7 +597,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     void downloadComplete(String result){
         json = result;
-        Log.d(tag,"[downloadComplete] Storing json file"+json);
+        Log.d(tag,"[Getting json] Storing json file");
     }
 
 
