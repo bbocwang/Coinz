@@ -18,7 +18,7 @@
     <ListView
         android:id="@+id/bankList"
         android:layout_width="match_parent"
-        android:layout_height="332dp"
+        android:layout_height="253dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_marginTop="52dp" />
@@ -39,4 +39,36 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="38dp"
         android:text="Store" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="219dp"
+        android:layout_marginStart="46dp"
+        android:text="You can store"
+        android:textColor="@android:color/black"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/remainingCoin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/textView4"
+        android:layout_centerHorizontal="true"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textView6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/textView4"
+        android:layout_toEndOf="@+id/sendBankButton"
+        android:text="coins today"
+        android:textColor="@android:color/black"
+        android:textSize="18sp" />
 </RelativeLayout>

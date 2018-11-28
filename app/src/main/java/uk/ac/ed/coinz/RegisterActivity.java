@@ -17,6 +17,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.Objects;
+
 public class RegisterActivity extends AppCompatActivity implements View.OnClickListener {
 
     private FirebaseAuth mAuth;
@@ -27,11 +29,11 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
         mAuth = FirebaseAuth.getInstance();
-        editTextEmail = (EditText) findViewById(R.id.editTextEmail);
-        editTextPassword = (EditText) findViewById(R.id.LoginPassword);
+        editTextEmail = findViewById(R.id.editTextEmail);
+        editTextPassword = findViewById(R.id.LoginPassword);
         findViewById(R.id.SignUpButton).setOnClickListener(this);
         findViewById(R.id.signUpButton).setOnClickListener(this);
-        progressBar = (ProgressBar) findViewById(R.id.progressbar);
+        progressBar = findViewById(R.id.progressbar);
         findViewById(R.id.textViewLogin).setOnClickListener(this);
 
     }
@@ -65,25 +67,22 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         progressBar.setVisibility(View.VISIBLE);
 
         mAuth.createUserWithEmailAndPassword(email,password)
-                .addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>(){
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task){
-                        progressBar.setVisibility(View.GONE);
-                        if (task.isSuccessful()){
-                            Toast.makeText(getApplicationContext(),"Registered Successful", Toast.LENGTH_SHORT).show();
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            Intent intent = new Intent(RegisterActivity.this,GameActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            startActivity(intent);
+                .addOnCompleteListener(RegisterActivity.this, task -> {
+                    progressBar.setVisibility(View.GONE);
+                    if (task.isSuccessful()){
+                        Toast.makeText(getApplicationContext(),"Registered Successful", Toast.LENGTH_SHORT).show();
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        Intent intent = new Intent(RegisterActivity.this,GameActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                    }
+                    else {
+                        if(task.getException() instanceof FirebaseAuthUserCollisionException){
+                            Toast.makeText(getApplicationContext(),"This email has already been registered", Toast.LENGTH_SHORT).show();
                         }
-                        else {
-                            if(task.getException() instanceof FirebaseAuthUserCollisionException){
-                                Toast.makeText(getApplicationContext(),"This email has already been registered", Toast.LENGTH_SHORT).show();
-                            }
 
-                            else {
-                                Toast.makeText(getApplicationContext(),task.getException().getMessage(),Toast.LENGTH_SHORT).show();
-                            }
+                        else {
+                            Toast.makeText(getApplicationContext(), Objects.requireNonNull(task.getException()).getMessage(),Toast.LENGTH_SHORT).show();
                         }
                     }
                 });

@@ -4,17 +4,30 @@ public class Coin {
     private String id;
     private double value;
     private String currency;
+    private String firstOwnerId;
 
-    public Coin(String id, String value, String currency) {
+    Coin(){}
+
+    Coin(String id, String value, String currency, String firstOwnerId) {
         this.id = id;
         this.value = Double.parseDouble(value);
         this.currency = currency;
+        this.firstOwnerId = firstOwnerId;
     }
 
-    public Coin(String id, Double value, String currency){
+    Coin(String id, Double value, String currency, String firstOwnerId){
         this.id = id;
         this.value = value;
         this.currency = currency;
+        this.firstOwnerId = firstOwnerId;
+    }
+
+    public void setFirstOwnerId(String firstOwnerId) {
+        this.firstOwnerId = firstOwnerId;
+    }
+
+    public String getFirstOwnerId() {
+        return firstOwnerId;
     }
 
     public String getId() {

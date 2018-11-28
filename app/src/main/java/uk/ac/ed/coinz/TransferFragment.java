@@ -1,7 +1,7 @@
 package uk.ac.ed.coinz;
 
 import android.annotation.SuppressLint;
-import android.content.res.Resources;
+
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -13,9 +13,9 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ListView;
+
 import android.widget.Spinner;
-import android.widget.TextView;
+
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -25,14 +25,13 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.database.core.UserWriteRecord;
-import com.mapbox.mapboxsdk.storage.Resource;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@SuppressLint("LogNotTimber")
 public class TransferFragment extends Fragment implements AdapterView.OnItemSelectedListener, View.OnClickListener {
     Spinner coinSpinner;
     Spinner receiverSpinner;
@@ -45,7 +44,6 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
     private String selectedCurrency;
     private Double selectedValue;
     private String receiverEmail;
-    EditText receiver;
     EditText transfernote;
     private List<User> userList;
 
@@ -60,7 +58,7 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
         receiverSpinner.setOnItemSelectedListener(this);
 
 
-        transfernote = (EditText) view.findViewById(R.id.transferNote);
+        transfernote = view.findViewById(R.id.transferNote);
         view.findViewById(R.id.transferButton).setOnClickListener(this);
 
 
@@ -77,40 +75,43 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
 
 
         walletRef.addValueEventListener(new ValueEventListener() {
+            @SuppressLint("LogNotTimber")
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 coinList.clear();
                 for(DataSnapshot coinsSnapshot: dataSnapshot.getChildren()){
                     coinList.clear();
                     Map<String,Map<String,Object>> map = (Map<String, Map<String, Object>>) coinsSnapshot.getValue();
-                    for(Map<String,Object> submap: map.values())
-                    {
-                        String currency = (String) submap.get("currency");
-                        String id = (String) submap.get("id");
-                        Double  value = (Double) submap.get("value");
+                    if (map != null) {
+                        for(Map<String,Object> submap: map.values())
+                        {
+                            String currency = (String) submap.get("currency");
+                            String id = (String) submap.get("id");
+                            Double  value = (Double) submap.get("value");
 
-                        Coin coin = new Coin(id,value,currency);
-                        coinList.add(coin);
+                            Coin coin = new Coin(id,value,currency,currentUser.getUid());
+                            coinList.add(coin);
+                        }
                     }
-                    Log.d(tag,"[coinList size2]:" + coinList.size());
+                    Log.d(tag,"[coinList size]:" + coinList.size());
 
                 }
-                List<StringWithTag> coinInfo = new ArrayList<StringWithTag>();
+                List<StringWithTag> coinInfo = new ArrayList<>();
                 if(coinList != null){
                     for(Coin c:coinList){
-                        Double value = (Double) c.getValue();
-                        String currency = (String) c.getCurrency();
+                        Double value = c.getValue();
+                        String currency = c.getCurrency();
                         DecimalFormat df = new DecimalFormat("#.##");
                         value = Double.valueOf(df.format(value));
                         String value_string = String.valueOf(value);
-                        String info = (String) value_string +" "+ currency;
+                        String info = value_string +" "+ currency;
                         //Using the StringWithTag class to store the ID of the coin
                         coinInfo.add(new StringWithTag(info,c.getId(),currency,c.getValue()));
                     }
                 }
 
                 if(getActivity() != null){
-                    ArrayAdapter<String> adapter = new ArrayAdapter(getActivity(),
+                    ArrayAdapter<StringWithTag> adapter = new ArrayAdapter<>(getActivity(),
                             android.R.layout.simple_list_item_1, coinInfo);
                     coinSpinner.setAdapter(adapter);
                 }
@@ -157,8 +158,8 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
         }
     }
 
+    @SuppressLint("LogNotTimber")
     private void transfer() {
-        String notes = transfernote.getText().toString().trim();
         String receiverId = null;
         Boolean found = false;
         for(User u: userList){
@@ -174,7 +175,7 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
             Toast.makeText(getActivity(), "Your coin has been sent to" + receiverEmail,Toast.LENGTH_LONG).show();
             DatabaseReference receiverRef = database.getReference("users").child(receiverId);
             walletRef.child("wallet").child(selectedId).removeValue();
-            Coin coin = new Coin(selectedId,selectedValue,selectedCurrency);
+            Coin coin = new Coin(selectedId,selectedValue,selectedCurrency,currentUser.getUid());
             receiverRef.child("wallet").child(selectedId).setValue(coin);
         }else {
             Toast.makeText(getActivity(), "Select a Coin please",Toast.LENGTH_LONG).show();
@@ -188,7 +189,7 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
         public String currency;
         public Double value;
 
-        public StringWithTag(String stringPart, String tagPart,String currency,Double value) {
+        StringWithTag(String stringPart, String tagPart, String currency, Double value) {
             string = stringPart;
             id = tagPart;
             this.currency = currency;
@@ -201,20 +202,12 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
         }
     }
 
+    @SuppressLint("LogNotTimber")
     private void updateUserinfo() {
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         database = FirebaseDatabase.getInstance();
         DatabaseReference userinfoRef = database.getReference("userinfo").child("user");
-        if(currentUser != null){
-            Log.d(tag,"[OnconnectDatabase]current user:"+currentUser.getEmail().toString());
-        }else{
-            Log.d(tag,"[OnconnectDatabase]current user is null!");
-        }
-        if(userinfoRef != null){
-            Log.d(tag,"[OnconnectDatabase]Conected to the database!"+currentUser.getEmail().toString());
-        }else{
-            Log.d(tag,"[OnDataChange] database ref is null");
-        }
+        Log.d(tag,"[OnconnectDatabase]Conected to the database!"+ currentUser.getEmail());
         userinfoRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -222,24 +215,16 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
                     userList.clear();
                 }
                 for(DataSnapshot userSnapshot: dataSnapshot.getChildren()){
-
-                    Log.d(tag,"[Getting userinfo1]"+userSnapshot.toString());
-                    //Map<String,String> map = (Map<String, String>) userSnapshot.getValue();
-                    /*for(Map<String,String> submap: map.)
-                    {
-                        String email = (String) submap.get("email");
-                        String id = (String) submap.get("uid");
-                        User user = new User(email,id);
-                        userList.add(user);
-                        Log.d(tag,"[Getting userinfo]:"+email);
-                    }*/
                     User user = userSnapshot.getValue(User.class);
                     userList.add(user);
-                    Log.d(tag,"[Getting userinfo2]"+user.getEmail());
+                    if (user != null) {
+                        Log.d(tag,"[Getting userinfo]"+user.getEmail());
+                    }
                 }
                 if(userList != null){
+                    //noinspection StatementWithEmptyBody
                     if(userList.contains(new User(currentUser.getEmail(),currentUser.getUid()))){
-
+                        //Do nothing
                     }else{
                         //add current user to the userinfo database
                         User user = new User(currentUser.getEmail(),currentUser.getUid());
@@ -247,10 +232,7 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
                     }
 
                 }
-                Log.d(tag,"[!!!!!Getting userinfo2]"+userList.size());
-                for(User u:userList){
-                    Log.d(tag,"[!!!!!Getting userinfo2]"+u.getEmail());
-                }
+                Log.d(tag,"[Getting userinfo] Number of users:"+userList.size());
 
                 List<String> emailList = new ArrayList<>();
                 for(User u:userList){
@@ -258,7 +240,7 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
                 }
 
                 if(getActivity() != null){
-                    ArrayAdapter<String> adapter = new ArrayAdapter(getActivity(),
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(),
                             android.R.layout.simple_list_item_1, emailList);
                     receiverSpinner.setAdapter(adapter);
                 }

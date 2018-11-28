@@ -27,134 +27,43 @@ import java.util.List;
 import java.util.Map;
 
 public class WalletActivity extends AppCompatActivity {
-    private final String tag = "WalletActivity";
-
-
-    private DatabaseReference walletRef;
-    private FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-    private FirebaseDatabase database;
-    private List<Coin> coinList;
-    //private ListView listView;
-
+    String tag = "WalletActivity";
     @SuppressLint("LogNotTimber")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wallet);
-        //listView = (ListView) findViewById(R.id.coin_list_view);
-        walletRef = FirebaseDatabase.getInstance().getReference();
-        currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        database = FirebaseDatabase.getInstance();
-        walletRef = database.getReference("users").child(currentUser.getUid());
-        coinList = new ArrayList<>();
-        //getCoinInformation();
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(navListener);
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                 new WalletFragment()).commit();
 
-
-
-        Log.d(tag,"[coinList size1]:" + coinList.size());
+        Log.d(tag,"[OnCreate] Wallet Activity created");
     }
 
+    @SuppressLint("LogNotTimber")
     private BottomNavigationView.OnNavigationItemSelectedListener navListener =
-            new BottomNavigationView.OnNavigationItemSelectedListener() {
-                @Override
-                public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-                    Fragment selectedFragment = null;
+            menuItem -> {
+                Fragment selectedFragment = null;
 
-                    switch (menuItem.getItemId()){
-                        case R.id.nav_wallet:
-                            selectedFragment = new WalletFragment();
-                            break;
-                        case R.id.nav_mail:
-                            selectedFragment = new TransferFragment();
-                            break;
-                        case R.id.nav_bank:
-                            selectedFragment = new BankFragment();
-                            break;
-                    }
+                switch (menuItem.getItemId()){
+                    case R.id.nav_wallet:
+                        Log.d(tag,"[Select Fragment] wallet fragment selected");
+                        selectedFragment = new WalletFragment();
+                        break;
+                    case R.id.nav_mail:
+                        selectedFragment = new TransferFragment();
+                        Log.d(tag,"[Select Fragment] Transfer fragment selected");
+                        break;
+                    case R.id.nav_bank:
+                        Log.d(tag,"[Select Fragment] Bank fragment selected");
+                        selectedFragment = new BankFragment();
+                        break;
+                }
+                if (selectedFragment != null) {
                     getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                             selectedFragment).commit();
-                    return true;
                 }
+                return true;
             };
-
-    /*private void getCoinInformation() {
-
-        walletRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                // This method is called once with the initial value and again
-                // whenever data at this location is updated.
-                if (dataSnapshot.getValue() != null){
-                    Log.d(tag, "[getValue]" +dataSnapshot.getValue().toString());
-                    Log.d(tag, "[getChildren]" +dataSnapshot.getChildren().toString());
-                    Log.d(tag, "[getChildrenClass]" +dataSnapshot.getChildren().getClass().toString());
-                }
-                coinList.clear();
-                for(DataSnapshot coinsSnapshot: dataSnapshot.getChildren()){
-                    coinList.clear();
-                    Map<String,Map<String,Object>> map = (Map<String, Map<String, Object>>) coinsSnapshot.getValue();
-                    for(Map<String,Object> submap: map.values())
-                    {
-                        String currency = (String) submap.get("currency");
-                        String id = (String) submap.get("id");
-                        Double  value = (Double) submap.get("value");
-
-                        Coin coin = new Coin(id,value,currency);
-                        coinList.add(coin);
-                    }
-                    Log.d(tag,"[coinList value]:"+coinList.toString());
-
-                }
-
-                Log.d(tag, "[Realtime Database] Wallet updated" );
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // Failed to read value
-                Log.w(tag, "Failed to read value.", error.toException());
-            }
-        });
-    }*/
-
-    /*@Override
-    protected void onStart() {
-        super.onStart();
-        walletRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                coinList.clear();
-                for(DataSnapshot coinsSnapshot: dataSnapshot.getChildren()){
-                    coinList.clear();
-                    Map<String,Map<String,Object>> map = (Map<String, Map<String, Object>>) coinsSnapshot.getValue();
-                    for(Map<String,Object> submap: map.values())
-                    {
-                        String currency = (String) submap.get("currency");
-                        String id = (String) submap.get("id");
-                        Double  value = (Double) submap.get("value");
-
-                        Coin coin = new Coin(id,value,currency);
-                        coinList.add(coin);
-                    }
-                    Log.d(tag,"[coinList size2]:" + coinList.size());
-
-                }
-                //CoinsAdapter coinsAdapter = new CoinsAdapter(WalletActivity.this,coinList);
-                //listView.setAdapter(coinsAdapter);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
-        Log.d(tag,"[coinList size3]:" + coinList.size());
-    }*/
-
-
 }
