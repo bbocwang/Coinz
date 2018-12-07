@@ -31,6 +31,9 @@ import org.json.JSONObject;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +89,9 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
         walletRef.addValueEventListener(new ValueEventListener() {
             @SuppressLint("LogNotTimber")
             @Override
+            //Updating the coinList, to create the spinner of the coin list to chose
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Log.d(tag,"[On Update Coinlist] Updating the coinList");
                 coinList.clear();
                 for(DataSnapshot coinsSnapshot: dataSnapshot.getChildren()){
                     coinList.clear();
@@ -140,8 +145,9 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
     @SuppressLint("LogNotTimber")
     private void updateChangeRate() {
         String preferencesFile = "LastDownloadDate";
-        SharedPreferences settings = Objects.requireNonNull(getContext()).getSharedPreferences(preferencesFile,
-                Context.MODE_PRIVATE);
+        //get the rates from the shared preferences
+        SharedPreferences settings = Objects.requireNonNull(getContext())
+                .getSharedPreferences(preferencesFile,Context.MODE_PRIVATE);
 
         downloadDate = settings.getString("lastDownloadDate","");
         Log.d(tag, "[OnUpdate Change rate] Recalled lastDownloadDate is '"+downloadDate+"'");
@@ -153,14 +159,15 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
             rates.put("DOLR", Double.valueOf(j.getJSONObject("rates").getString("DOLR")));
             rates.put("QUID", Double.valueOf(j.getJSONObject("rates").getString("QUID")));
             rates.put("PENY", Double.valueOf(j.getJSONObject("rates").getString("PENY")));
+            Log.d(tag,"[OnUpdate Change rate] current rate updated");
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
     }
 
     @SuppressLint("LogNotTimber")
     private void updateBankinfo() {
+        //fetch the data of bank account information from the database and
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         database = FirebaseDatabase.getInstance();
         DatabaseReference userinfoRef = database.getReference("bank");
@@ -185,6 +192,17 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
                     }
                 }
                 Log.d(tag,"[Getting bankinfo] bankList size:"+bankList.size());
+
+                class SortByGold implements Comparator<BankAccount> {
+                    public int compare(BankAccount a, BankAccount b) {
+                        if(a.getGold() < b.getGold()) return -1;
+                        else if(a.getGold() == b.getGold()) return 0;
+                        else return 1;
+                    }
+                }
+
+                bankList.sort(Comparator.comparing(BankAccount::getGold));
+                Collections.reverse(bankList);
 
                 List<String> bankinfo = new ArrayList<>();
                 for(BankAccount b:bankList){
@@ -231,32 +249,101 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
             @SuppressLint({"LogNotTimber", "ShowToast", "SetTextI18n"})
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Log.d(tag,"[On storing Coin] Trying to store the coin");
                 BankAccount bankAccount = dataSnapshot.getValue(BankAccount.class);
-                Double gold = selectedValue * rates.get(selectedCurrency);
                 if(selectedId != null){
+                    Double gold = selectedValue * rates.get(selectedCurrency);
+                    walletRef = database.getReference("users").child(currentUser.getUid()).child("wallet").child(selectedId);
 
-                    if(bankAccount == null){
-                        BankAccount b = new BankAccount(gold,currentUser.getUid(),currentUser.getEmail(),downloadDate,19);
-                        bankRef.setValue(b);
-                        deleteCoin(bankAccount.getRemainingCoin());
-                    }else{
+                    if(remaining == 0){
+                        walletRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Coin coin = dataSnapshot.getValue(Coin.class);
+                                if (bankAccount != null) {
+                                    Double newgold = bankAccount.getGold()+gold;
+                                }
+                                if (coin != null) {
+                                    if(coin.getFirstOwnerId().equals(currentUser.getUid())){
+                                        Toast.makeText(getActivity(),"You can only store 20 your coins everyday, " +
+                                                "try to exchange with other user!",Toast.LENGTH_LONG).show();
+                                        Log.d(tag,"[On storing Coin] reach maximum number of current day");
+                                    }else{
+                                        BankAccount b = new BankAccount(gold,currentUser.getUid(),currentUser.getEmail(),downloadDate,0);
+                                        walletRef.removeValue();
+                                        Toast.makeText(getActivity(),"Your Coin has been transfered to the Bank",Toast.LENGTH_LONG).show();
+                                    }
+                                }
+                            }
 
-                        Double newgold = bankAccount.getGold()+gold;
-
-                            if(bankAccount.getLastCountDate().equals(downloadDate)){
-                                remaining = bankAccount.getRemainingCoin() - 1;
-
-                                Log.d(tag,"[Current selected Coin]"+selectedId);
-                            }else {
-                                remaining = 19;
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
 
                             }
-                            BankAccount b = new BankAccount(newgold,currentUser.getUid(),currentUser.getEmail(),downloadDate,remaining);
+                        });
+                    }else{
+                        if(bankAccount == null){
+                            BankAccount b = new BankAccount(gold,currentUser.getUid(),currentUser.getEmail(),downloadDate,19);
                             bankRef.setValue(b);
-                            deleteCoin(bankAccount.getRemainingCoin());
+                            walletRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                    Coin coin = dataSnapshot.getValue(Coin.class);
+                                    if (coin != null) {
+                                        if(coin.getFirstOwnerId().equals(currentUser.getUid())){
+                                            remaining = 20;
+                                        }else{
+                                            remaining = 19;
+                                        }
+                                        textViewRemainingCoin.setText(remaining.toString());
+                                    }
+                                    walletRef.removeValue();
+                                }
 
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                }
+                            });
+                        }else{
+                            Double newgold = bankAccount.getGold()+gold;
+                            walletRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                    Coin coin = dataSnapshot.getValue(Coin.class);
+                                    if (coin != null) {
+                                        if(coin.getFirstOwnerId().equals(currentUser.getUid())){
+                                            if(bankAccount.getLastCountDate().equals(downloadDate)){
+                                                remaining = bankAccount.getRemainingCoin() - 1;
+
+                                                Log.d(tag,"[Current selected Coin]"+selectedId);
+                                            }else {
+                                                remaining = 19;
+
+                                            }
+                                            BankAccount b = new BankAccount(newgold,currentUser.getUid(),
+                                                    currentUser.getEmail(),downloadDate,remaining);
+                                            bankRef.setValue(b);
+                                            walletRef.removeValue();
+                                        }else{
+                                            walletRef.removeValue();
+                                            BankAccount b = new BankAccount(newgold,currentUser.getUid()
+                                                    ,currentUser.getEmail(),downloadDate,remaining);
+                                            bankRef.setValue(b);
+                                        }
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                }
+                            });
+                        }
+                        if(remaining != 0){
+                            selectedId = null;
+                        }
                     }
-                    selectedId = null;
                 }else {
                         Toast.makeText(getActivity(),"please select a coin",Toast.LENGTH_LONG).show();
                 }
@@ -271,45 +358,6 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
 
     }
 
-    private void deleteCoin(Integer remainingCoin) {
-        database = FirebaseDatabase.getInstance();
-        currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        walletRef = database.getReference("users").child(currentUser.getUid());
-        walletRef.child("wallet").child(selectedId).addListenerForSingleValueEvent(new ValueEventListener() {
-            @SuppressLint({"LogNotTimber", "SetTextI18n", "ShowToast"})
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Coin coin = dataSnapshot.getValue(Coin.class);
-                if(remainingCoin == 0){
-                    if(!ownerId.equals(currentUser.getUid())){
-                        walletRef.child("wallet").child(selectedId).removeValue();
-                    }else{
-                        Toast.makeText(getActivity(),"You can only store 20 coins perday",Toast.LENGTH_SHORT);
-                    }
-                }else{
-                    if (coin != null) {
-                        ownerId = coin.getFirstOwnerId();
-                    }
-                    Log.d(tag,"[Owner Id]:"+ownerId);
-
-                    if(!ownerId.equals(currentUser.getUid())){
-                        remaining += 1;
-                        textViewRemainingCoin.setText(remaining.toString());
-                        walletRef.child("wallet").child(selectedId).removeValue();
-                    }else{
-                        walletRef.child("wallet").child(selectedId).removeValue();
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
-
-    }
 
     //The inner class StringWithTag for storing the id with the content
     public class StringWithTag {
