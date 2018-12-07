@@ -10,8 +10,8 @@
         android:layout_width="190dp"
         android:layout_height="64dp"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="200dp" />
+        android:layout_alignStart="@+id/receiverSpinner"
+        android:layout_marginTop="204dp" />
 
     <EditText
         android:id="@+id/transferNote"
@@ -36,11 +36,12 @@
 
     <Spinner
         android:id="@+id/receiverSpinner"
-        android:layout_width="190dp"
+        android:layout_width="218dp"
         android:layout_height="64dp"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="75dp" />
+        android:layout_marginEnd="59dp"
+        android:layout_marginTop="81dp" />
 
     <TextView
         android:id="@+id/textView2"
@@ -59,9 +60,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBaseline="@+id/receiverSpinner"
-        android:layout_toStartOf="@+id/spinner_transfer"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="12dp"
         android:text="Receiver:"
         android:textAlignment="textStart"
+        android:textColor="@android:color/black"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textView7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="false"
+        android:layout_marginTop="227dp"
+        android:layout_toStartOf="@+id/textView2"
+        android:text="Coin:"
         android:textColor="@android:color/black"
         android:textSize="20sp"
         android:textStyle="bold" />

@@ -255,33 +255,6 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
                     Double gold = selectedValue * rates.get(selectedCurrency);
                     walletRef = database.getReference("users").child(currentUser.getUid()).child("wallet").child(selectedId);
 
-                    if(remaining == 0){
-                        walletRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                Coin coin = dataSnapshot.getValue(Coin.class);
-                                if (bankAccount != null) {
-                                    Double newgold = bankAccount.getGold()+gold;
-                                }
-                                if (coin != null) {
-                                    if(coin.getFirstOwnerId().equals(currentUser.getUid())){
-                                        Toast.makeText(getActivity(),"You can only store 20 your coins everyday, " +
-                                                "try to exchange with other user!",Toast.LENGTH_LONG).show();
-                                        Log.d(tag,"[On storing Coin] reach maximum number of current day");
-                                    }else{
-                                        BankAccount b = new BankAccount(gold,currentUser.getUid(),currentUser.getEmail(),downloadDate,0);
-                                        walletRef.removeValue();
-                                        Toast.makeText(getActivity(),"Your Coin has been transfered to the Bank",Toast.LENGTH_LONG).show();
-                                    }
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                            }
-                        });
-                    }else{
                         if(bankAccount == null){
                             BankAccount b = new BankAccount(gold,currentUser.getUid(),currentUser.getEmail(),downloadDate,19);
                             bankRef.setValue(b);
@@ -291,9 +264,9 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
                                     Coin coin = dataSnapshot.getValue(Coin.class);
                                     if (coin != null) {
                                         if(coin.getFirstOwnerId().equals(currentUser.getUid())){
-                                            remaining = 20;
-                                        }else{
                                             remaining = 19;
+                                        }else{
+                                            remaining = 20;
                                         }
                                         textViewRemainingCoin.setText(remaining.toString());
                                     }
@@ -306,44 +279,68 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
                                 }
                             });
                         }else{
-                            Double newgold = bankAccount.getGold()+gold;
-                            walletRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                    Coin coin = dataSnapshot.getValue(Coin.class);
-                                    if (coin != null) {
-                                        if(coin.getFirstOwnerId().equals(currentUser.getUid())){
-                                            if(bankAccount.getLastCountDate().equals(downloadDate)){
-                                                remaining = bankAccount.getRemainingCoin() - 1;
-
-                                                Log.d(tag,"[Current selected Coin]"+selectedId);
-                                            }else {
-                                                remaining = 19;
-
+                            if(remaining == 0){
+                                walletRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                        Coin coin = dataSnapshot.getValue(Coin.class);
+                                        if (bankAccount != null) {
+                                            Double newgold = bankAccount.getGold()+gold;
+                                        }
+                                        if (coin != null) {
+                                            if(coin.getFirstOwnerId().equals(currentUser.getUid())){
+                                                Toast.makeText(getActivity(),"You can only store 20 your coins everyday, " +
+                                                        "try to exchange with other user!",Toast.LENGTH_LONG).show();
+                                                Log.d(tag,"[On storing Coin] reach maximum number of current day");
+                                            }else{
+                                                BankAccount b = new BankAccount(gold,currentUser.getUid(),currentUser.getEmail(),downloadDate,0);
+                                                walletRef.removeValue();
+                                                Toast.makeText(getActivity(),"Your Coin has been transfered to the Bank",Toast.LENGTH_LONG).show();
                                             }
-                                            BankAccount b = new BankAccount(newgold,currentUser.getUid(),
-                                                    currentUser.getEmail(),downloadDate,remaining);
-                                            bankRef.setValue(b);
-                                            walletRef.removeValue();
-                                        }else{
-                                            walletRef.removeValue();
-                                            BankAccount b = new BankAccount(newgold,currentUser.getUid()
-                                                    ,currentUser.getEmail(),downloadDate,remaining);
-                                            bankRef.setValue(b);
                                         }
                                     }
-                                }
 
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                                }
-                            });
+                                    }
+                                });}else{
+                                Double newgold = bankAccount.getGold()+gold;
+                                walletRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                        Coin coin = dataSnapshot.getValue(Coin.class);
+                                        if (coin != null) {
+                                            if(coin.getFirstOwnerId().equals(currentUser.getUid())){
+                                                if(bankAccount.getLastCountDate().equals(downloadDate)){
+                                                    remaining = bankAccount.getRemainingCoin() - 1;
+
+                                                    Log.d(tag,"[Current selected Coin]"+selectedId);
+                                                }else {
+                                                    remaining = 19;
+
+                                                }
+                                                BankAccount b = new BankAccount(newgold,currentUser.getUid(),
+                                                        currentUser.getEmail(),downloadDate,remaining);
+                                                bankRef.setValue(b);
+                                                walletRef.removeValue();
+                                            }else{
+                                                walletRef.removeValue();
+                                                BankAccount b = new BankAccount(newgold,currentUser.getUid()
+                                                        ,currentUser.getEmail(),downloadDate,remaining);
+                                                bankRef.setValue(b);
+                                            }
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                    }
+                                });}
                         }
-                        if(remaining != 0){
                             selectedId = null;
-                        }
-                    }
+
                 }else {
                         Toast.makeText(getActivity(),"please select a coin",Toast.LENGTH_LONG).show();
                 }

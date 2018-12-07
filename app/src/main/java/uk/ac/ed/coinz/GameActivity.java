@@ -421,7 +421,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         downloadjson();
         featureCollection = FeatureCollection.fromJson(json);
-        features = featureCollection.features();
+        if(featureCollection != null){
+            features = featureCollection.features();
+        }
 
 
 
