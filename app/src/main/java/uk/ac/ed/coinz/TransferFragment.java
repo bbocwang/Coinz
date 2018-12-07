@@ -178,7 +178,7 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
             Coin coin = new Coin(selectedId,selectedValue,selectedCurrency,currentUser.getUid());
             receiverRef.child("wallet").child(selectedId).setValue(coin);
         }else {
-            Toast.makeText(getActivity(), "Select a Coin please",Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), "Please Select a Coin",Toast.LENGTH_LONG).show();
         }
     }
 
