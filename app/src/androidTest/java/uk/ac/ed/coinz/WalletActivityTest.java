@@ -112,19 +112,6 @@ public class WalletActivityTest {
             e.printStackTrace();
         }
 
-        ViewInteraction relativeLayout2 = onView(
-                allOf(withId(R.id.loginButton),
-                        isDisplayed()));
-        relativeLayout2.perform(click());
-
-        // Added a sleep statement to match the app's execution delay.
-        // The recommended way to handle such scenarios is to use Espresso idling resources:
-        // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
-        try {
-            Thread.sleep(3419);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
         ViewInteraction appCompatImageView = onView(
                 allOf(withId(R.id.wallet),
@@ -140,7 +127,7 @@ public class WalletActivityTest {
         // The recommended way to handle such scenarios is to use Espresso idling resources:
         // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
         try {
-            Thread.sleep(3266);
+            Thread.sleep(366);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -165,45 +152,6 @@ public class WalletActivityTest {
                         isDisplayed()));
         bottomNavigationItemView2.perform(click());
 
-        ViewInteraction appCompatSpinner = onView(
-                allOf(withId(R.id.bankCoinspinner),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(R.id.fragment_container),
-                                        0),
-                                2),
-                        isDisplayed()));
-        appCompatSpinner.perform(click());
-
-        ViewInteraction bottomNavigationItemView3 = onView(
-                allOf(withId(R.id.nav_mail), withContentDescription("Transfer"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(R.id.bottom_navigation),
-                                        0),
-                                1),
-                        isDisplayed()));
-        bottomNavigationItemView3.perform(click());
-
-        ViewInteraction appCompatSpinner2 = onView(
-                allOf(withId(R.id.receiverSpinner),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(R.id.fragment_container),
-                                        0),
-                                3),
-                        isDisplayed()));
-        appCompatSpinner2.perform(click());
-
-        ViewInteraction appCompatSpinner3 = onView(
-                allOf(withId(R.id.spinner_transfer),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(R.id.fragment_container),
-                                        0),
-                                0),
-                        isDisplayed()));
-        appCompatSpinner3.perform(click());
 
     }
 

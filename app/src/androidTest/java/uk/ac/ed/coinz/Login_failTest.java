@@ -13,7 +13,6 @@ import android.view.ViewParent;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,7 +21,6 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.replaceText;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
@@ -37,13 +35,7 @@ public class Login_failTest {
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
 
-    @Rule
-    public GrantPermissionRule mRuntimePermissionRule;
-
-    @Before
-    public void setUp() throws Exception {
-        mRuntimePermissionRule = GrantPermissionRule.grant(android.Manifest.permission.ACCESS_FINE_LOCATION);
-    }
+    @Rule public GrantPermissionRule permissionRule = GrantPermissionRule.grant(android.Manifest.permission.ACCESS_FINE_LOCATION);
 
     @Test
     public void login_failTest() {
@@ -177,49 +169,6 @@ public class Login_failTest {
                                 0),
                         isDisplayed()));
         relativeLayout2.perform(click());
-
-
-        ViewInteraction relativeLayout3 = onView(
-                allOf(withId(R.id.loginButton),
-                        childAtPosition(
-                                allOf(withId(R.id.cardView),
-                                        childAtPosition(
-                                                withClassName(is("android.support.constraint.ConstraintLayout")),
-                                                3)),
-                                0),
-                        isDisplayed()));
-        relativeLayout3.perform(click());
-
-
-        ViewInteraction imageView = onView(
-                allOf(withId(R.id.collectButton),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        imageView.check(matches(isDisplayed()));
-
-        ViewInteraction imageView2 = onView(
-                allOf(withId(R.id.wallet),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                2),
-                        isDisplayed()));
-        imageView2.check(matches(isDisplayed()));
-
-        ViewInteraction imageView3 = onView(
-                allOf(withId(R.id.wallet),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                2),
-                        isDisplayed()));
-        imageView3.check(matches(isDisplayed()));
 
 
     }
