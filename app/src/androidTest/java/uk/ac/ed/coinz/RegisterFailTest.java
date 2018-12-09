@@ -30,92 +30,49 @@ import static org.hamcrest.Matchers.is;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class Login_failTest {
+public class RegisterFailTest {
+
+    @Rule
+    public GrantPermissionRule permissionRule = GrantPermissionRule
+            .grant(android.Manifest.permission.ACCESS_FINE_LOCATION);
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
 
-    @Rule public GrantPermissionRule permissionRule = GrantPermissionRule
-            .grant(android.Manifest.permission.ACCESS_FINE_LOCATION);
-
     @Test
-    public void login_failTest() {
+    public void registerFailTest() {
+
+        ViewInteraction appCompatTextView = onView(
+                allOf(withId(R.id.TextViewRegister), withText("Register Here"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(android.R.id.content),
+                                        0),
+                                5),
+                        isDisplayed()));
+        appCompatTextView.perform(click());
+
+        ViewInteraction relativeLayout = onView(
+                allOf(withId(R.id.signUpButton),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.widget.RelativeLayout")),
+                                        3),
+                                0),
+                        isDisplayed()));
+        relativeLayout.perform(click());
+
         ViewInteraction appCompatEditText = onView(
-                allOf(withId(R.id.LoginUsername),
+                allOf(withId(R.id.editTextEmail),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
                                 1),
                         isDisplayed()));
-        appCompatEditText.perform(click());
+        appCompatEditText.perform(replaceText("1"), closeSoftKeyboard());
 
         ViewInteraction appCompatEditText2 = onView(
-                allOf(withId(R.id.LoginUsername),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText2.perform(click());
-
-        ViewInteraction appCompatEditText3 = onView(
-                allOf(withId(R.id.LoginUsername),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText3.perform(click());
-
-        // Added a sleep statement to match the app's execution delay.
-        // The recommended way to handle such scenarios is to use Espresso idling resources:
-        // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
-
-        ViewInteraction appCompatEditText4 = onView(
-                allOf(withId(R.id.LoginUsername),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText4.perform(replaceText("123@gmail.com"), closeSoftKeyboard());
-
-        ViewInteraction appCompatEditText5 = onView(
-                allOf(withId(R.id.LoginUsername), withText("123@gmail.com"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText5.perform(click());
-
-        ViewInteraction appCompatEditText6 = onView(
-                allOf(withId(R.id.LoginUsername), withText("123@gmail.com"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText6.perform(replaceText("1@gmail.com"));
-
-        ViewInteraction appCompatEditText7 = onView(
-                allOf(withId(R.id.LoginUsername), withText("1@gmail.com"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText7.perform(closeSoftKeyboard());
-
-
-        ViewInteraction appCompatEditText8 = onView(
                 allOf(withId(R.id.LoginPassword),
                         childAtPosition(
                                 childAtPosition(
@@ -123,54 +80,67 @@ public class Login_failTest {
                                         0),
                                 2),
                         isDisplayed()));
-        appCompatEditText8.perform(replaceText("123456"), closeSoftKeyboard());
-
-
-        ViewInteraction relativeLayout = onView(
-                allOf(withId(R.id.loginButton),
-                        childAtPosition(
-                                allOf(withId(R.id.cardView),
-                                        childAtPosition(
-                                                withClassName(is("android.support.constraint.ConstraintLayout")),
-                                                3)),
-                                0),
-                        isDisplayed()));
-        relativeLayout.perform(click());
-
-
-        ViewInteraction appCompatEditText9 = onView(
-                allOf(withId(R.id.LoginUsername), withText("1@gmail.com"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText9.perform(replaceText("123@gmail.com"));
-
-        ViewInteraction appCompatEditText10 = onView(
-                allOf(withId(R.id.LoginUsername), withText("123@gmail.com"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText10.perform(closeSoftKeyboard());
-
-
+        appCompatEditText2.perform(replaceText("123456"), closeSoftKeyboard());
 
         ViewInteraction relativeLayout2 = onView(
-                allOf(withId(R.id.loginButton),
+                allOf(withId(R.id.signUpButton),
                         childAtPosition(
-                                allOf(withId(R.id.cardView),
-                                        childAtPosition(
-                                                withClassName(is("android.support.constraint.ConstraintLayout")),
-                                                3)),
+                                childAtPosition(
+                                        withClassName(is("android.widget.RelativeLayout")),
+                                        3),
                                 0),
                         isDisplayed()));
         relativeLayout2.perform(click());
 
+        ViewInteraction appCompatEditText3 = onView(
+                allOf(withId(R.id.editTextEmail), withText("1"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(android.R.id.content),
+                                        0),
+                                1),
+                        isDisplayed()));
+        appCompatEditText3.perform(replaceText("1@gmail.com"));
+
+        ViewInteraction appCompatEditText4 = onView(
+                allOf(withId(R.id.editTextEmail), withText("1@gmail.com"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(android.R.id.content),
+                                        0),
+                                1),
+                        isDisplayed()));
+        appCompatEditText4.perform(closeSoftKeyboard());
+
+        ViewInteraction appCompatEditText5 = onView(
+                allOf(withId(R.id.LoginPassword), withText("123456"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(android.R.id.content),
+                                        0),
+                                2),
+                        isDisplayed()));
+        appCompatEditText5.perform(replaceText("12345"));
+
+        ViewInteraction appCompatEditText6 = onView(
+                allOf(withId(R.id.LoginPassword), withText("12345"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(android.R.id.content),
+                                        0),
+                                2),
+                        isDisplayed()));
+        appCompatEditText6.perform(closeSoftKeyboard());
+
+        ViewInteraction relativeLayout3 = onView(
+                allOf(withId(R.id.signUpButton),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.widget.RelativeLayout")),
+                                        3),
+                                0),
+                        isDisplayed()));
+        relativeLayout3.perform(click());
 
     }
 

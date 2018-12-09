@@ -207,7 +207,7 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
                         remaining = bankAccount.getRemainingCoin();
                         String accountDate = bankAccount.getLastCountDate();
                         if (!accountDate.equals(downloadDate)){
-                            remaining = 20;
+                            remaining = 25;
                         }
                         textViewRemainingCoin.setText(remaining.toString());
                     }
@@ -251,7 +251,21 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
     public void onNothingSelected(AdapterView<?> parent) {
     }
 
-    //When click the store button, try to send the coin to the bank
+
+    /*When click the store button, try to send the coin to the bank
+    *
+    * There are several things to consider:
+    * 1. If current user doesn't have a bank account(there's no data about user in bank database)
+    *    ,create a new bank account for user in the database, store the coin.
+    *
+    * 2. Every user can only store 25 of their own coins to the bank per day.
+    *
+    * 3. If the coin is not collected by the current user, the remaining coin number will not
+    *   change, and coin will be sent to the bank
+    *
+    * 4. If the remaining coin number is 0, and the current coin is collected by the current user,
+    *    reject, and make a toast: please share your spare change with other players
+    * */
     @Override
     public void onClick(View v) {
 
@@ -272,7 +286,7 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
 
                     if(bankAccount == null){
                         BankAccount b = new BankAccount(gold,currentUser.getUid()
-                                ,currentUser.getEmail(),downloadDate,19);
+                                ,currentUser.getEmail(),downloadDate,24);
 
                         bankRef.setValue(b);//create new bank account for new user
 
@@ -282,9 +296,9 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
                                 Coin coin = dataSnapshot.getValue(Coin.class);
                                 if (coin != null) {
                                     if(coin.getFirstOwnerId().equals(currentUser.getUid())){
-                                        remaining = 19;
+                                        remaining = 24;
                                     }else{
-                                        remaining = 20;
+                                        remaining = 25;
                                     }
                                     textViewRemainingCoin.setText(remaining.toString());
                                 }
@@ -294,6 +308,7 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
                             public void onCancelled(@NonNull DatabaseError databaseError) {}
                         });
                     }else{
+
                         //if the current user already have a bank account in the bank
                         if(remaining == 0){
                             walletRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -302,8 +317,9 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
                                     Coin coin = dataSnapshot.getValue(Coin.class);
                                     if (coin != null) {
                                         if(coin.getFirstOwnerId().equals(currentUser.getUid())){
+                                            //if the user trying to send more than 25 of their own coin
                                             Toast.makeText(getActivity(),"You can only store 20 your coins everyday, " +
-                                                    "try to exchange with other user!",Toast.LENGTH_LONG).show();
+                                                    "try to share spare change with other users!",Toast.LENGTH_LONG).show();
                                             Log.d(tag,"[On storing Coin] reach maximum number of current day");
                                         }else{
                                             Double newgold = bankAccount.getGold()+gold;
@@ -320,6 +336,8 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
                                 @Override
                                 public void onCancelled(@NonNull DatabaseError databaseError) {}
                             });}else{
+
+                            //remaining coin is not 0, store the coin
                             Double newgold = bankAccount.getGold()+gold;
                             walletRef.addListenerForSingleValueEvent(new ValueEventListener() {
 
@@ -336,7 +354,7 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
                                             }else {
                                                 //if current date is not the last download date,
                                                 //reset the remaining coin number
-                                                remaining = 19;
+                                                remaining = 24;
                                             }
                                             BankAccount b = new BankAccount(newgold,currentUser.getUid(),
                                                     currentUser.getEmail(),downloadDate,remaining);

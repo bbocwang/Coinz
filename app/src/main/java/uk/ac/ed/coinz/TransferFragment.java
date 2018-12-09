@@ -1,7 +1,8 @@
 package uk.ac.ed.coinz;
 
 import android.annotation.SuppressLint;
-
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -13,9 +14,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-
 import android.widget.Spinner;
-
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -30,6 +29,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @SuppressLint("LogNotTimber")
 public class TransferFragment extends Fragment implements AdapterView.OnItemSelectedListener, View.OnClickListener {
@@ -47,6 +47,10 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
     EditText transfernote;
     private List<User> userList;
 
+    //check if the coin is a spare change
+    private String downloadDate;
+    boolean checkSpareChange;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -60,6 +64,8 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
 
         transfernote = view.findViewById(R.id.transferNote);
         view.findViewById(R.id.transferButton).setOnClickListener(this);
+
+        checkSpareChange = checkSpareChange();
 
 
         walletRef = FirebaseDatabase.getInstance().getReference();
@@ -170,7 +176,7 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
         }
         if(!found){
             Toast.makeText(getActivity(),"Receiver Email not found, please double check",Toast.LENGTH_LONG).show();
-        }else if(selectedId != null) {
+        }else if(selectedId != null && checkSpareChange) {
             Log.d(tag,"[onTransfer]: coin has been sent to "+receiverEmail);
             Toast.makeText(getActivity(), "Your coin has been sent to" + receiverEmail,Toast.LENGTH_LONG).show();
             DatabaseReference receiverRef = database.getReference("users").child(receiverId);
@@ -178,8 +184,59 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
             Coin coin = new Coin(selectedId,selectedValue,selectedCurrency,currentUser.getUid());
             receiverRef.child("wallet").child(selectedId).setValue(coin);
         }else {
-            Toast.makeText(getActivity(), "Please Select a Coin",Toast.LENGTH_LONG).show();
+            if(!checkSpareChange){
+
+                Toast.makeText(getActivity(),"Sorry, You can only share your spare change!",Toast.LENGTH_LONG).show();
+            }else{
+                Toast.makeText(getActivity(), "Please Select a Coin",Toast.LENGTH_LONG).show();
+            }
         }
+    }
+
+    //check if the user are sending the spare change
+    private boolean checkSpareChange() {
+
+        String preferencesFile = "LastDownloadDate";
+        //get the rates from the shared preferences
+        SharedPreferences settings = Objects.requireNonNull(getContext())
+                .getSharedPreferences(preferencesFile, Context.MODE_PRIVATE);
+
+        downloadDate = settings.getString("lastDownloadDate","");
+        Log.d(tag, "[OnUpdate Change rate] Recalled lastDownloadDate is '"+downloadDate+"'");
+
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        database = FirebaseDatabase.getInstance();
+        DatabaseReference bankRef = database.getReference("bank").child(currentUser.getUid());
+
+        bankRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                BankAccount bankAccount = dataSnapshot.getValue(BankAccount.class);
+                if(bankAccount == null){
+                    checkSpareChange = false;
+                    Toast.makeText(getActivity(),"Please go to bank create a bank account first",Toast.LENGTH_LONG).show();
+                }
+                if (bankAccount != null && !bankAccount.getLastCountDate().equals(downloadDate)) {
+                    //it's another day
+                    checkSpareChange = false;
+                    Toast.makeText(getActivity(),"Sorry, You can only share the spare change!",Toast.LENGTH_LONG).show();
+                }
+                if (bankAccount != null && bankAccount.getLastCountDate().equals(downloadDate)) {
+                    if (bankAccount.getRemainingCoin() == 0) {
+                        checkSpareChange = true;
+                    } else if (bankAccount.getRemainingCoin() > 0) {
+                        checkSpareChange = false;
+                        Toast.makeText(getActivity(),"Sorry, You can only share the spare change!",Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        return checkSpareChange;
     }
 
     //The inner class StringWithTag for storing the id with the content

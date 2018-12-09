@@ -12,6 +12,8 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -61,10 +63,11 @@ import java.util.concurrent.ExecutionException;
 
 /*This activity is the main game activity
 *
-*it contains a map view and two bottons,User can find themself on the map, and the
-* map will show the coins around user, different currency has different icoins
-* when they walk near a coin, user need to click the button of coin icon which means
-* collect, then if the coin is within 25m of user, the coin will be collected
+*it contains a map view and two bottons,User can find themself on the map, and
+* the map will show the coins around user, different currency has different icoins
+* when they walk near a coin, if there's some coins is within 25 m of user, the coin
+* will be collected by the app, and will be send to the wallet. User can also collect
+* the coin by themselfe by clicking the coin icon at the right bottom of the map.
 *
 * if the user click the wallet icon, it will open the wallet activity.
 *
@@ -76,9 +79,10 @@ import java.util.concurrent.ExecutionException;
 * https://www.mapbox.com/help/android-navigation-sdk/
 * https://www.mapbox.com/help/first-steps-android-sdk/
 * */
+
 @SuppressWarnings("ALL")
 @SuppressLint("LogNotTimber")
-public class GameActivity extends AppCompatActivity implements OnMapReadyCallback,PermissionsListener,LocationEngineListener, View.OnClickListener {
+public class GameActivity extends AppCompatActivity implements OnMapReadyCallback,PermissionsListener,LocationEngineListener, View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     private final String tag = "GameActivity";
 
     //Geojson related stuff
@@ -112,6 +116,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     public List<Coin> coinList;//current coins on the map
     private List<User> userList;
 
+    //Layout related stuff
+    Switch aSwitch;
+    private boolean auto;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,6 +131,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
+        aSwitch = findViewById(R.id.switch1);
+        aSwitch.setChecked(true);
+        aSwitch.setOnCheckedChangeListener(this);
         findViewById(R.id.collectButton).setOnClickListener(this);
         findViewById(R.id.wallet).setOnClickListener(this);
         connectDatabase();//connect to the database
@@ -307,7 +318,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         //if there's no coins around user, show toast
         if(!result){
             Log.d(tag,"No coins around you");
-            Toast.makeText(this,"No coins around you! try to walk around",Toast.LENGTH_SHORT).show();
+            if(!auto){
+                Toast.makeText(this,"No coins around you! try to walk around",
+                        Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -652,10 +666,24 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         if(location != null){
             originLocation = location;
             setCameraPosition(location);
+
+            //if current is auto mode, collect the coin every time when location changed
+            if(auto){
+                collect();
+            }
         }
     }
 
-
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        auto = isChecked;
+        if(auto){
+            Toast.makeText(this,"Auto mode: the coin will be collected automatically"
+                    ,Toast.LENGTH_SHORT).show();
+        }else {
+            Toast.makeText(this,"Auto collect disabeled",0).show();
+        }
+    }
 
     //inner class extends asyncTask, to download the json file
     @SuppressLint("StaticFieldLeak")

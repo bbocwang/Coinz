@@ -23,6 +23,7 @@ import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard
 import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
+import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
@@ -30,16 +31,18 @@ import static org.hamcrest.Matchers.is;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class Login_failTest {
+public class ShareSpareChangeFailTest {
 
+    @Rule
+    public GrantPermissionRule permissionRule = GrantPermissionRule
+            .grant(android.Manifest.permission.ACCESS_FINE_LOCATION);
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
 
-    @Rule public GrantPermissionRule permissionRule = GrantPermissionRule
-            .grant(android.Manifest.permission.ACCESS_FINE_LOCATION);
 
     @Test
-    public void login_failTest() {
+    public void shareSpareChangeFailTest() {
+
         ViewInteraction appCompatEditText = onView(
                 allOf(withId(R.id.LoginUsername),
                         childAtPosition(
@@ -58,64 +61,30 @@ public class Login_failTest {
                                         0),
                                 1),
                         isDisplayed()));
-        appCompatEditText2.perform(click());
+        appCompatEditText2.perform(replaceText("12"), closeSoftKeyboard());
+
 
         ViewInteraction appCompatEditText3 = onView(
-                allOf(withId(R.id.LoginUsername),
+                allOf(withId(R.id.LoginUsername), withText("12"),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
                                 1),
                         isDisplayed()));
-        appCompatEditText3.perform(click());
-
-        // Added a sleep statement to match the app's execution delay.
-        // The recommended way to handle such scenarios is to use Espresso idling resources:
-        // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
+        appCompatEditText3.perform(replaceText("123@gmail.com"));
 
         ViewInteraction appCompatEditText4 = onView(
-                allOf(withId(R.id.LoginUsername),
+                allOf(withId(R.id.LoginUsername), withText("123@gmail.com"),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
                                 1),
                         isDisplayed()));
-        appCompatEditText4.perform(replaceText("123@gmail.com"), closeSoftKeyboard());
+        appCompatEditText4.perform(closeSoftKeyboard());
 
         ViewInteraction appCompatEditText5 = onView(
-                allOf(withId(R.id.LoginUsername), withText("123@gmail.com"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText5.perform(click());
-
-        ViewInteraction appCompatEditText6 = onView(
-                allOf(withId(R.id.LoginUsername), withText("123@gmail.com"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText6.perform(replaceText("1@gmail.com"));
-
-        ViewInteraction appCompatEditText7 = onView(
-                allOf(withId(R.id.LoginUsername), withText("1@gmail.com"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText7.perform(closeSoftKeyboard());
-
-
-        ViewInteraction appCompatEditText8 = onView(
                 allOf(withId(R.id.LoginPassword),
                         childAtPosition(
                                 childAtPosition(
@@ -123,8 +92,7 @@ public class Login_failTest {
                                         0),
                                 2),
                         isDisplayed()));
-        appCompatEditText8.perform(replaceText("123456"), closeSoftKeyboard());
-
+        appCompatEditText5.perform(replaceText("123456"), closeSoftKeyboard());
 
         ViewInteraction relativeLayout = onView(
                 allOf(withId(R.id.loginButton),
@@ -137,40 +105,62 @@ public class Login_failTest {
                         isDisplayed()));
         relativeLayout.perform(click());
 
+        try {
+            Thread.sleep(1111);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-        ViewInteraction appCompatEditText9 = onView(
-                allOf(withId(R.id.LoginUsername), withText("1@gmail.com"),
+
+        ViewInteraction appCompatImageView = onView(
+                allOf(withId(R.id.wallet),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
-                                1),
+                                2),
                         isDisplayed()));
-        appCompatEditText9.perform(replaceText("123@gmail.com"));
+        appCompatImageView.perform(click());
 
-        ViewInteraction appCompatEditText10 = onView(
-                allOf(withId(R.id.LoginUsername), withText("123@gmail.com"),
+        // Added a sleep statement to match the app's execution delay.
+        // The recommended way to handle such scenarios is to use Espresso idling resources:
+        // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
+        try {
+            Thread.sleep(366);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+        ViewInteraction bottomNavigationItemView = onView(
+                allOf(withId(R.id.nav_mail), withContentDescription("Transfer"),
                         childAtPosition(
                                 childAtPosition(
-                                        withId(android.R.id.content),
+                                        withId(R.id.bottom_navigation),
                                         0),
                                 1),
                         isDisplayed()));
-        appCompatEditText10.perform(closeSoftKeyboard());
+        bottomNavigationItemView.perform(click());
 
-
-
-        ViewInteraction relativeLayout2 = onView(
-                allOf(withId(R.id.loginButton),
+        ViewInteraction appCompatButton = onView(
+                allOf(withId(R.id.transferButton), withText("Transfer"),
                         childAtPosition(
-                                allOf(withId(R.id.cardView),
-                                        childAtPosition(
-                                                withClassName(is("android.support.constraint.ConstraintLayout")),
-                                                3)),
-                                0),
+                                childAtPosition(
+                                        withId(R.id.fragment_container),
+                                        0),
+                                2),
                         isDisplayed()));
-        relativeLayout2.perform(click());
+        appCompatButton.perform(click());
 
+        ViewInteraction bottomNavigationItemView2 = onView(
+                allOf(withId(R.id.nav_bank), withContentDescription("Bank"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(R.id.bottom_navigation),
+                                        0),
+                                2),
+                        isDisplayed()));
+        bottomNavigationItemView2.perform(click());
 
     }
 

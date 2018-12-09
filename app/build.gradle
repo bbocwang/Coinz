@@ -25,6 +25,7 @@ android {
     }
     testOptions {
         unitTests.includeAndroidResources = true
+        execution 'ANDROID_TEST_ORCHESTRATOR'
     }
 
 }
@@ -59,6 +60,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test:rules:1.0.2'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    androidTestUtil 'com.android.support.test:orchestrator:1.0.2'
 
 }
 
