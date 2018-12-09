@@ -297,6 +297,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 }
 
+
                 //if this is a new coin
                 if(!repetition)
                 {
