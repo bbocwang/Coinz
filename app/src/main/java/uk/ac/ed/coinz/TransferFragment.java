@@ -175,10 +175,10 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
             }
         }
         if(!found){
-            Toast.makeText(getActivity(),"Receiver Email not found, please double check",Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(),"Receiver Email not found, please double check",Toast.LENGTH_SHORT).show();
         }else if(selectedId != null && checkSpareChange) {
             Log.d(tag,"[onTransfer]: coin has been sent to "+receiverEmail);
-            Toast.makeText(getActivity(), "Your coin has been sent to" + receiverEmail,Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), "Your coin has been sent to" + receiverEmail,Toast.LENGTH_SHORT).show();
             DatabaseReference receiverRef = database.getReference("users").child(receiverId);
             walletRef.child("wallet").child(selectedId).removeValue();
             Coin coin = new Coin(selectedId,selectedValue,selectedCurrency,currentUser.getUid());
@@ -186,9 +186,9 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
         }else {
             if(!checkSpareChange){
 
-                Toast.makeText(getActivity(),"Sorry, You can only share your spare change!",Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(),"Sorry, You can only share your spare change!",Toast.LENGTH_SHORT).show();
             }else{
-                Toast.makeText(getActivity(), "Please Select a Coin",Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), "Please Select a Coin",Toast.LENGTH_SHORT).show();
             }
         }
     }

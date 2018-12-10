@@ -9,7 +9,7 @@ public class CoinTest {
     private Coin coin;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         coin = new Coin("123456",0.62,"QUID","1111");
     }
 
@@ -31,5 +31,11 @@ public class CoinTest {
     @Test
     public void coinCurrencyTest() {
         Assert.assertEquals("QUID",coin.getCurrency());
+    }
+
+    @Test
+    public void setFirstOwnerId() {
+        coin.setFirstOwnerId("123123");
+        Assert.assertEquals(coin.getFirstOwnerId(),"123123");
     }
 }

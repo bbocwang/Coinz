@@ -1,5 +1,7 @@
 package uk.ac.ed.coinz;
 
+import java.util.Objects;
+
 /*
 * This is a class for storing coin in a Coin object.
 *
@@ -13,6 +15,19 @@ public class Coin {
     private double value;
     private String currency;
     private String firstOwnerId;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Coin)) return false;
+        Coin coin = (Coin) o;
+        return Objects.equals(id, coin.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 
     //empty constructer for creating the coin object from firebase, ignore the warning
     public Coin(){}
