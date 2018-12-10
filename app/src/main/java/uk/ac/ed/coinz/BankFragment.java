@@ -90,6 +90,11 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
         bankList = new ArrayList<>();
         rates = new HashMap<>();
 
+        //fetch bank account information from database
+        updateBankinfo();
+        //update the current rate
+        updateChangeRate();
+
         //initialize the layout
         View view = inflater.inflate(R.layout.fragment_bank, container, false);
         view.findViewById(R.id.sendBankButton).setOnClickListener(this);
@@ -97,11 +102,6 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
         listView = view.findViewById(R.id.bankList);
         coinSpinner = view.findViewById(R.id.bankCoinspinner);
         coinSpinner.setOnItemSelectedListener(this);
-
-        //fetch bank account information from database
-        updateBankinfo();
-        //update the current rate
-        updateChangeRate();
 
 
         walletRef.addValueEventListener(new ValueEventListener() {

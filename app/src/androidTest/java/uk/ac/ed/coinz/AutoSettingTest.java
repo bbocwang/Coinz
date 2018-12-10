@@ -23,7 +23,6 @@ import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard
 import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
-import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
@@ -31,7 +30,7 @@ import static org.hamcrest.Matchers.is;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class ShareSpareChangeFailTest {
+public class AutoSettingTest {
 
     @Rule
     public GrantPermissionRule permissionRule = GrantPermissionRule
@@ -40,9 +39,8 @@ public class ShareSpareChangeFailTest {
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
 
-
     @Test
-    public void shareSpareChangeFailTest() {
+    public void autoSettingTest() {
 
         ViewInteraction appCompatEditText = onView(
                 allOf(withId(R.id.LoginUsername),
@@ -52,30 +50,20 @@ public class ShareSpareChangeFailTest {
                                         0),
                                 1),
                         isDisplayed()));
-        appCompatEditText.perform(click());
+        appCompatEditText.perform(replaceText("123"), closeSoftKeyboard());
+
 
         ViewInteraction appCompatEditText2 = onView(
-                allOf(withId(R.id.LoginUsername),
+                allOf(withId(R.id.LoginUsername), withText("123"),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
                                 1),
                         isDisplayed()));
-        appCompatEditText2.perform(replaceText("12"), closeSoftKeyboard());
-
+        appCompatEditText2.perform(replaceText("123@gmail.com"));
 
         ViewInteraction appCompatEditText3 = onView(
-                allOf(withId(R.id.LoginUsername), withText("12"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText3.perform(replaceText("123@gmail.com"));
-
-        ViewInteraction appCompatEditText4 = onView(
                 allOf(withId(R.id.LoginUsername), withText("123@gmail.com"),
                         childAtPosition(
                                 childAtPosition(
@@ -83,9 +71,9 @@ public class ShareSpareChangeFailTest {
                                         0),
                                 1),
                         isDisplayed()));
-        appCompatEditText4.perform(closeSoftKeyboard());
+        appCompatEditText3.perform(closeSoftKeyboard());
 
-        ViewInteraction appCompatEditText5 = onView(
+        ViewInteraction appCompatEditText4 = onView(
                 allOf(withId(R.id.LoginPassword),
                         childAtPosition(
                                 childAtPosition(
@@ -93,7 +81,7 @@ public class ShareSpareChangeFailTest {
                                         0),
                                 2),
                         isDisplayed()));
-        appCompatEditText5.perform(replaceText("123456"), closeSoftKeyboard());
+        appCompatEditText4.perform(replaceText("123456"), closeSoftKeyboard());
 
         ViewInteraction relativeLayout = onView(
                 allOf(withId(R.id.loginButton),
@@ -107,61 +95,64 @@ public class ShareSpareChangeFailTest {
         relativeLayout.perform(click());
 
         try {
-            Thread.sleep(1111);
+            Thread.sleep(1116);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
+        ViewInteraction switch_ = onView(
+                allOf(withId(R.id.switch1),isDisplayed()));
+        switch_.perform(click());
 
-        ViewInteraction appCompatImageView = onView(
-                allOf(withId(R.id.wallet),
+        ViewInteraction switch_2 = onView(
+                allOf(withId(R.id.switch1), withText("Auto"),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
-                                2),
+                                3),
                         isDisplayed()));
-        appCompatImageView.perform(click());
+        switch_2.perform(click());
 
-        // Added a sleep statement to match the app's execution delay.
-        // The recommended way to handle such scenarios is to use Espresso idling resources:
-        // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
-        try {
-            Thread.sleep(366);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
-        ViewInteraction bottomNavigationItemView = onView(
-                allOf(withId(R.id.nav_mail), withContentDescription("Transfer"),
+        ViewInteraction switch_3 = onView(
+                allOf(withId(R.id.switch1), withText("Auto"),
                         childAtPosition(
                                 childAtPosition(
-                                        withId(R.id.bottom_navigation),
+                                        withId(android.R.id.content),
                                         0),
-                                1),
+                                3),
                         isDisplayed()));
-        bottomNavigationItemView.perform(click());
+        switch_3.perform(click());
 
-        ViewInteraction appCompatButton = onView(
-                allOf(withId(R.id.transferButton), withText("Transfer"),
+        ViewInteraction switch_4 = onView(
+                allOf(withId(R.id.switch1), withText("Auto"),
                         childAtPosition(
                                 childAtPosition(
-                                        withId(R.id.fragment_container),
+                                        withId(android.R.id.content),
                                         0),
-                                2),
+                                3),
                         isDisplayed()));
-        appCompatButton.perform(click());
+        switch_4.perform(click());
 
-        ViewInteraction bottomNavigationItemView2 = onView(
-                allOf(withId(R.id.nav_bank), withContentDescription("Bank"),
+        ViewInteraction switch_5 = onView(
+                allOf(withId(R.id.switch1), withText("Auto"),
                         childAtPosition(
                                 childAtPosition(
-                                        withId(R.id.bottom_navigation),
+                                        withId(android.R.id.content),
                                         0),
-                                2),
+                                3),
                         isDisplayed()));
-        bottomNavigationItemView2.perform(click());
+        switch_5.perform(click());
+
+        ViewInteraction switch_6 = onView(
+                allOf(withId(R.id.switch1), withText("Auto"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(android.R.id.content),
+                                        0),
+                                3),
+                        isDisplayed()));
+        switch_6.perform(click());
 
     }
 

@@ -126,6 +126,14 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         Mapbox.getInstance(this,getString(R.string.access_token));
         setContentView(R.layout.activity_game);
+        initializeLayout(savedInstanceState);
+        downloadjson();
+        connectDatabase();//connect to the database
+        updateUserinfo();//fetch the user information
+    }
+
+    private void initializeLayout(Bundle savedInstanceState) {
+        auto = true;
         coinList = new ArrayList<>();
         userList = new ArrayList<>();
         mapView = findViewById(R.id.mapView);
@@ -136,8 +144,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         aSwitch.setOnCheckedChangeListener(this);
         findViewById(R.id.collectButton).setOnClickListener(this);
         findViewById(R.id.wallet).setOnClickListener(this);
-        connectDatabase();//connect to the database
-        updateUserinfo();//fetch the user information
     }
 
     //this method is called when the app starts, to get the user's wallet information
@@ -285,7 +291,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 markerLoc.setLongitude(coordinates.get(0));
             }
 
-            //calculate the distance between the user and the coin
+            //check the distance between the user and the coin
             float distanceInMeters = originLocation.distanceTo(markerLoc);
             if(distanceInMeters <= 25){
                 Boolean repetition = false;
@@ -296,7 +302,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 "coin!",Toast.LENGTH_LONG).show();
                     }
                 }
-
 
                 //if this is a new coin
                 if(!repetition)
@@ -310,6 +315,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
         }
+
         if(foundfeature != null) {
             //after the collect, recreate the markers to remove the collected coin
             features.remove(foundfeature);
@@ -474,10 +480,19 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         //get geojson file
 
 
-        downloadjson();
+        //downloadjson();
         featureCollection = FeatureCollection.fromJson(json);
         if(featureCollection != null){
+            Log.d(tag,"[OnCreateFeatureCollection]featurecollection != null");
             features = featureCollection.features();
+        }else{
+            Log.d(tag,"[OnCreateFeatureCollection]featurecollection == null"+json);
+            if(json == null){
+                Log.d(tag,"[OnCreateFeatureCollection] json == null");
+            }else{
+
+                Log.d(tag,"[OnCreateFeatureCollection] json != null");
+            }
         }
 
         if(locationEngine != null){
@@ -536,15 +551,14 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }else {
                     //create the different markers
                     IconFactory iconFactroy = IconFactory.getInstance(this);
-                    Icon blue_icon = iconFactroy.fromResource(R.drawable.blue_marker);
-                    Icon gree_icon = iconFactroy.fromResource(R.drawable.green_marker);
-                    Icon purple_icon = iconFactroy.fromResource(R.drawable.purple_marker);
-                    Icon yellow_icon = iconFactroy.fromResource(R.drawable.yellow_marker);
 
                     // create the marker using different icoins depends on the currency
                     switch (currency) {
                         case "QUID":
                             if (coordinates != null) {
+                                Icon blue_icon = iconFactroy
+                                        .fromResource(R.drawable.blue_marker);
+
                                 coinMarker = mapboxMap.addMarker(new MarkerOptions()
                                         .title(currency).snippet("value:" + value)
                                         .position(new LatLng(coordinates.get(1)
@@ -553,6 +567,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                             markers.add(coinMarker);
                         case "DOLR":
                             if (coordinates != null) {
+                                Icon gree_icon = iconFactroy
+                                        .fromResource(R.drawable.green_marker);
+
                                 coinMarker = mapboxMap.addMarker(new MarkerOptions()
                                         .title(currency).snippet("value:" + value)
                                         .position(new LatLng(coordinates.get(1)
@@ -561,6 +578,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                             markers.add(coinMarker);
                         case "SHIL":
                             if (coordinates != null) {
+                                Icon purple_icon = iconFactroy
+                                        .fromResource(R.drawable.purple_marker);
+
                                 coinMarker = mapboxMap.addMarker(new MarkerOptions()
                                         .title(currency).snippet("value:" + value)
                                         .position(new LatLng(coordinates.get(1)
@@ -569,6 +589,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                             markers.add(coinMarker);
                         case "PENY":
                             if (coordinates != null) {
+                                Icon yellow_icon = iconFactroy
+                                        .fromResource(R.drawable.yellow_marker);
+
                                 coinMarker = mapboxMap.addMarker(new MarkerOptions()
                                         .title(currency).snippet("value:" + value)
                                         .position(new LatLng(coordinates.get(1)
@@ -620,7 +643,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         if(locationEngine != null){
             locationEngine.removeLocationUpdates();
             locationEngine.removeLocationEngineListener(this);
-
         }
     }
 

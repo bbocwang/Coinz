@@ -31,7 +31,7 @@ import static org.hamcrest.Matchers.is;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class ShareSpareChangeFailTest {
+public class Bank25RemainingCoinTest {
 
     @Rule
     public GrantPermissionRule permissionRule = GrantPermissionRule
@@ -40,9 +40,8 @@ public class ShareSpareChangeFailTest {
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
 
-
     @Test
-    public void shareSpareChangeFailTest() {
+    public void bank25RemainingCoinTest() {
 
         ViewInteraction appCompatEditText = onView(
                 allOf(withId(R.id.LoginUsername),
@@ -62,11 +61,10 @@ public class ShareSpareChangeFailTest {
                                         0),
                                 1),
                         isDisplayed()));
-        appCompatEditText2.perform(replaceText("12"), closeSoftKeyboard());
-
+        appCompatEditText2.perform(replaceText("123"), closeSoftKeyboard());
 
         ViewInteraction appCompatEditText3 = onView(
-                allOf(withId(R.id.LoginUsername), withText("12"),
+                allOf(withId(R.id.LoginUsername), withText("123"),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
@@ -95,7 +93,7 @@ public class ShareSpareChangeFailTest {
                         isDisplayed()));
         appCompatEditText5.perform(replaceText("123456"), closeSoftKeyboard());
 
-        ViewInteraction relativeLayout = onView(
+        ViewInteraction relativeLayout3 = onView(
                 allOf(withId(R.id.loginButton),
                         childAtPosition(
                                 allOf(withId(R.id.cardView),
@@ -104,14 +102,16 @@ public class ShareSpareChangeFailTest {
                                                 3)),
                                 0),
                         isDisplayed()));
-        relativeLayout.perform(click());
+        relativeLayout3.perform(click());
 
+        // Added a sleep statement to match the app's execution delay.
+        // The recommended way to handle such scenarios is to use Espresso idling resources:
+        // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
         try {
-            Thread.sleep(1111);
+            Thread.sleep(666);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
 
         ViewInteraction appCompatImageView = onView(
                 allOf(withId(R.id.wallet),
@@ -127,33 +127,12 @@ public class ShareSpareChangeFailTest {
         // The recommended way to handle such scenarios is to use Espresso idling resources:
         // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
         try {
-            Thread.sleep(366);
+            Thread.sleep(666);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-
         ViewInteraction bottomNavigationItemView = onView(
-                allOf(withId(R.id.nav_mail), withContentDescription("Transfer"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(R.id.bottom_navigation),
-                                        0),
-                                1),
-                        isDisplayed()));
-        bottomNavigationItemView.perform(click());
-
-        ViewInteraction appCompatButton = onView(
-                allOf(withId(R.id.transferButton), withText("Transfer"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(R.id.fragment_container),
-                                        0),
-                                2),
-                        isDisplayed()));
-        appCompatButton.perform(click());
-
-        ViewInteraction bottomNavigationItemView2 = onView(
                 allOf(withId(R.id.nav_bank), withContentDescription("Bank"),
                         childAtPosition(
                                 childAtPosition(
@@ -161,7 +140,23 @@ public class ShareSpareChangeFailTest {
                                         0),
                                 2),
                         isDisplayed()));
-        bottomNavigationItemView2.perform(click());
+        bottomNavigationItemView.perform(click());
+
+        try {
+            Thread.sleep(1166);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        ViewInteraction appCompatButton = onView(
+                allOf(withId(R.id.sendBankButton), withText("Store"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(R.id.fragment_container),
+                                        0),
+                                3),
+                        isDisplayed()));
+        appCompatButton.perform(click());
 
     }
 
