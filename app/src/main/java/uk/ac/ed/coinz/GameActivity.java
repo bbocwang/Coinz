@@ -196,6 +196,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             case R.id.collectButton:
                 //When click the collect button, collect the coin
                 collect();
+                if(auto){
+                    Toast.makeText(this,"No coin around you, try to walk around",Toast.LENGTH_SHORT).show();
+                }
                 break;
             case R.id.wallet:
                 //When click the wallet button, go to wallet
@@ -270,6 +273,11 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
                 }
+                Log.d(tag,"[!!!!!!Coinlist]"+coinList.size());
+                if(mapboxMap != null){
+                    mapboxMap.clear();
+                    createMarkers(features);
+                }
             }
 
             @Override
@@ -278,7 +286,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        Log.d(tag,"[!!!!!!Coinlist]"+coinList.size());
+
+
     }
 
     //This method is called when user click the coin button
@@ -506,7 +515,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         //restore preferences
         SharedPreferences settings = getSharedPreferences(preferencesFile,
                 Context.MODE_PRIVATE);
-        connectDatabase();
 
         //use""as default value
         downloadDate = settings.getString("lastDownloadDate","");
@@ -649,6 +657,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onResume() {
         super.onResume();
         mapView.onResume();
+        /*if(mapboxMap != null){
+            mapboxMap.clear();
+            createMarkers(features);
+        }*/
     }
 
     @Override
