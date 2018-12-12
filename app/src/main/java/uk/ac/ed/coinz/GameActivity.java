@@ -16,6 +16,7 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -23,6 +24,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineListener;
 import com.mapbox.android.core.location.LocationEnginePriority;
@@ -110,11 +114,13 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     //Database related stuff
     private FirebaseDatabase database;
+    FirebaseFirestore db;
     private DatabaseReference userAccountRef;
     private FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
     private HashMap coinsInWallet;
     public List<Coin> coinList;//current coins on the map
     private List<User> userList;
+    DocumentReference historyRef;
 
     //Layout related stuff
     Switch aSwitch;
@@ -208,9 +214,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     //connect to the database, fetch the coin information from firebase
     private void connectDatabase() {
-
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         database = FirebaseDatabase.getInstance();
+        db = FirebaseFirestore.getInstance();
+        historyRef = db.collection("CoinzHistory").document(currentUser.getUid());
         userAccountRef = database.getReference("users").child(currentUser.getUid());
 
         if(currentUser != null){
@@ -260,7 +267,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        database = FirebaseDatabase.getInstance();
+       /* database = FirebaseDatabase.getInstance();
         DatabaseReference historyRef = database.getReference("history").child(currentUser.getUid()).child(downloadDate);
         historyRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -273,7 +280,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
                 }
-                Log.d(tag,"[!!!!!!Coinlist]"+coinList.size());
+                Log.d(tag,"[Coinlist]"+coinList.size());
                 if(mapboxMap != null){
                     mapboxMap.clear();
                     createMarkers(features);
@@ -284,8 +291,28 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onCancelled(@NonNull DatabaseError databaseError) {
 
             }
-        });
+        });*/
 
+
+        this.historyRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                CoinList historyList = documentSnapshot.toObject(CoinList.class);
+                if(historyList != null){
+                    Log.d(tag,"[Cloud firestore connected]"+historyList.toString());
+                    for(Coin coin: historyList.getCoinList()){
+                        if(!coinList.contains(coin)){
+                            coinList.add(coin);
+                        }
+                    }
+                    Log.d(tag,"[Coinlist]"+coinList.size());
+                }
+                if(mapboxMap != null){
+                    mapboxMap.clear();
+                    createMarkers(features);
+                }
+            }
+        });
 
 
     }
@@ -299,66 +326,70 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         Feature foundfeature = null;
         List<Marker> chosedMarker = new ArrayList<>();
 
-        //scan the coin list to see if there's any coin around user
-        for (Marker marker : markers) {
+        if(markers != null){
+            //scan the coin list to see if there's any coin around user
+            for (Marker marker : markers) {
 
-            String markerid = marker.getSnippet();
-            Location markerLoc = new Location("");
-            if (marker != null) {
-                markerLoc.setLatitude(marker.getPosition().getLatitude());
-                markerLoc.setLongitude(marker.getPosition().getLongitude());
+
+                String markerid = marker.getSnippet();
+                Location markerLoc = new Location("");
+                if (marker != null) {
+                    markerLoc.setLatitude(marker.getPosition().getLatitude());
+                    markerLoc.setLongitude(marker.getPosition().getLongitude());
+                }
+
+                String currency = new String();
+                String value = new String();
+
+                //check the distance between the user and the coin
+                float distanceInMeters = originLocation.distanceTo(markerLoc);
+                if(distanceInMeters <= 25){
+                    Boolean repetition = false;
+                    for(Feature feature: features){
+                        //get the id of the coin
+                        String id = Objects.requireNonNull(feature.properties()).get("id").toString();
+                        id = id.substring(1, id.length() - 1);
+
+                        if(id.equals(markerid)){
+                            //get the currency of the coin
+                            currency = Objects.requireNonNull(feature.properties()).get("currency").toString();
+                            currency = currency.substring(1, currency.length() - 1);
+
+                            //get the value of the coin
+                            value = Objects.requireNonNull(feature.properties()).get("value").toString();
+                            value = value.substring(1, value.length() - 1);
+                            foundfeature = feature;
+                            mapboxMap.removeMarker(marker);
+                            chosedMarker.add(marker);
+                        }
+
+                    }
+                    for(Coin c:coinList){
+                        if(c.getId().equals(markerid)){
+                            repetition = true;
+                            Toast.makeText(this,"You have already collected this " +
+                                    "coin!",Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    //if this is a new coin
+                    if(!repetition)
+                    {
+                        Log.d(tag,"[get coin!]"+currency+value+"current location"+originLocation.toString());
+                        Toast.makeText(this,"You Got some Coin!",Toast.LENGTH_SHORT).show();
+                        Coin coin = new Coin(markerid,value,currency,currentUser.getUid());
+                        userAccountRef.child("wallet").child(markerid).setValue(coin);
+                        result = true;
+                    }
+                }
             }
-
-            String currency = new String();
-            String value = new String();
-
-            //check the distance between the user and the coin
-            float distanceInMeters = originLocation.distanceTo(markerLoc);
-            if(distanceInMeters <= 25){
-                Boolean repetition = false;
-                for(Feature feature: features){
-                    //get the id of the coin
-                    String id = Objects.requireNonNull(feature.properties()).get("id").toString();
-                    id = id.substring(1, id.length() - 1);
-
-                    if(id.equals(markerid)){
-                        //get the currency of the coin
-                        currency = Objects.requireNonNull(feature.properties()).get("currency").toString();
-                        currency = currency.substring(1, currency.length() - 1);
-
-                        //get the value of the coin
-                        value = Objects.requireNonNull(feature.properties()).get("value").toString();
-                        value = value.substring(1, value.length() - 1);
-                        foundfeature = feature;
-                        mapboxMap.removeMarker(marker);
-                        chosedMarker.add(marker);
-                    }
-
-                }
-                for(Coin c:coinList){
-                    if(c.getId().equals(markerid)){
-                        repetition = true;
-                        Toast.makeText(this,"You have already collected this " +
-                                "coin!",Toast.LENGTH_LONG).show();
-                    }
-                }
-
-                //if this is a new coin
-                if(!repetition)
-                {
-                    Log.d(tag,"[get coin!]"+currency+value+"current location"+originLocation.toString());
-                    Toast.makeText(this,"You Got some Coin!",Toast.LENGTH_SHORT).show();
-                    Coin coin = new Coin(markerid,value,currency,currentUser.getUid());
-                    userAccountRef.child("wallet").child(markerid).setValue(coin);
-                    result = true;
+            if(chosedMarker != null){
+                for (Marker marker:chosedMarker){
+                    markers.remove(marker);
                 }
             }
         }
-        if(chosedMarker != null){
-            for (Marker marker:chosedMarker){
-                markers.remove(marker);
-            }
-        }
+
 
         if(foundfeature != null) {
             //after the collect, recreate the markers to remove the collected coin
@@ -385,7 +416,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             mapboxMap.getUiSettings().setCompassEnabled(true);
             mapboxMap.getUiSettings().setZoomControlsEnabled(true);
             enableLocationComponent();
-            createMarkers(features);//create the marker of coins on the map
+            //createMarkers(features);//create the marker of coins on the map
             enableLocation();//using the location servise to get the location
 
         }
@@ -696,6 +727,15 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+        this.historyRef.set(new CoinList(coinList)).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Log.d(tag, "DocumentSnapshot successfully written!");
+
 
             }
         });
