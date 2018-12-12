@@ -521,8 +521,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             } catch (ExecutionException | InterruptedException e) {
                 e.printStackTrace();
             }
-            Log.d(tag, "[Downloadjson]  downloading from "+"http://homepages.inf.ed.ac.uk/stg/coinz/"
-                    + currentDate+"/coinzmap.geojson");
+
         }
         else {
             //restore preferences
