@@ -22,11 +22,9 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.is;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
@@ -43,22 +41,12 @@ public class RegisterFailTest {
     public void registerFailTest() {
 
         ViewInteraction appCompatTextView = onView(
-                allOf(withId(R.id.TextViewRegister), withText("Register Here"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                5),
+                allOf(withId(R.id.TextViewRegister),
                         isDisplayed()));
         appCompatTextView.perform(click());
 
         ViewInteraction relativeLayout = onView(
                 allOf(withId(R.id.signUpButton),
-                        childAtPosition(
-                                childAtPosition(
-                                        withClassName(is("android.widget.RelativeLayout")),
-                                        3),
-                                0),
                         isDisplayed()));
         relativeLayout.perform(click());
 
@@ -84,21 +72,11 @@ public class RegisterFailTest {
 
         ViewInteraction relativeLayout2 = onView(
                 allOf(withId(R.id.signUpButton),
-                        childAtPosition(
-                                childAtPosition(
-                                        withClassName(is("android.widget.RelativeLayout")),
-                                        3),
-                                0),
                         isDisplayed()));
         relativeLayout2.perform(click());
 
         ViewInteraction appCompatEditText3 = onView(
-                allOf(withId(R.id.editTextEmail), withText("1"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
+                allOf(withId(R.id.editTextEmail),
                         isDisplayed()));
         appCompatEditText3.perform(replaceText("1@gmail.com"));
 
@@ -134,11 +112,6 @@ public class RegisterFailTest {
 
         ViewInteraction relativeLayout3 = onView(
                 allOf(withId(R.id.signUpButton),
-                        childAtPosition(
-                                childAtPosition(
-                                        withClassName(is("android.widget.RelativeLayout")),
-                                        3),
-                                0),
                         isDisplayed()));
         relativeLayout3.perform(click());
 

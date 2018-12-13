@@ -117,11 +117,6 @@ public class WalletActivityTest {
 
         ViewInteraction appCompatImageView = onView(
                 allOf(withId(R.id.wallet),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                2),
                         isDisplayed()));
         appCompatImageView.perform(click());
 

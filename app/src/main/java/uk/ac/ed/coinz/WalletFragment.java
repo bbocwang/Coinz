@@ -23,6 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/*This is the wallet fragment
+*
+* The main function of it is to show a list of the coin in the wallet of the current user
+* */
+
 public class WalletFragment extends Fragment {
     private final String tag = "WalletFragment";
     private ListView listView;
@@ -52,6 +57,7 @@ public class WalletFragment extends Fragment {
         coinList = new ArrayList<>();
 
 
+        //fetch coin list information from the realtime database
         walletRef.addValueEventListener(new ValueEventListener() {
             @SuppressLint("LogNotTimber")
             @Override

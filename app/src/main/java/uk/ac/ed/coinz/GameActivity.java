@@ -271,32 +271,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-       /* database = FirebaseDatabase.getInstance();
-        DatabaseReference historyRef = database.getReference("history").child(currentUser.getUid()).child(downloadDate);
-        historyRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                CoinList historyList = dataSnapshot.getValue(CoinList.class);
-                if(historyList != null){
-                    for(Coin coin: historyList.getCoinList()){
-                        if(!coinList.contains(coin)){
-                            coinList.add(coin);
-                        }
-                    }
-                }
-                Log.d(tag,"[Coinlist]"+coinList.size());
-                if(mapboxMap != null){
-                    mapboxMap.clear();
-                    createMarkers(features);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });*/
-
 
         this.historyRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
@@ -347,13 +321,13 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 //check the distance between the user and the coin
                 float distanceInMeters = originLocation.distanceTo(markerLoc);
+
                 if(distanceInMeters <= 25){
                     Boolean repetition = false;
                     for(Feature feature: features){
                         //get the id of the coin
                         String id = Objects.requireNonNull(feature.properties()).get("id").toString();
                         id = id.substring(1, id.length() - 1);
-
                         if(id.equals(markerid)){
                             //get the currency of the coin
                             currency = Objects.requireNonNull(feature.properties()).get("currency").toString();
@@ -375,7 +349,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     "coin!",Toast.LENGTH_LONG).show();
                         }
                     }
-
                     //if this is a new coin
                     if(!repetition)
                     {
@@ -422,7 +395,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             enableLocationComponent();
             //createMarkers(features);//create the marker of coins on the map
             enableLocation();//using the location servise to get the location
-
         }
     }
 
@@ -498,7 +470,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                     Toast.LENGTH_LONG).show();
             finish();
         }
-
     }
 
     @Override
@@ -537,7 +508,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             json = settings.getString("json","");
             Log.d(tag, "[downloadFileTask] Recalled json file");
         }
-
     }
 
     @Override
@@ -817,7 +787,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     //inner class extends asyncTask, to download the json file
     @SuppressLint("StaticFieldLeak")
     public class DownloadFileTask extends AsyncTask<String, Void, String> {
-
         DownloadCompleteRunner downloadCompleteRunner = new DownloadCompleteRunner();
 
         @Override
@@ -854,8 +823,5 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             super.onPostExecute(result);
             DownloadCompleteRunner.downloadComplete(result);
         }
-
-
-
     }
 }

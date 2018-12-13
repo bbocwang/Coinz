@@ -52,11 +52,6 @@ public class Login_failTest {
 
         ViewInteraction appCompatEditText2 = onView(
                 allOf(withId(R.id.LoginUsername),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
                         isDisplayed()));
         appCompatEditText2.perform(click());
 

@@ -33,16 +33,8 @@ public class BankAccount {
         return remainingCoin;
     }
 
-    public void setGold(Double gold) {
-        this.gold = gold;
-    }
-
     public void setId(String id) {
         this.id = id;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public Double getGold() {

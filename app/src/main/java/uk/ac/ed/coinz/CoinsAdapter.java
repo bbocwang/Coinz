@@ -14,6 +14,7 @@ import android.widget.TextView;
 import java.text.DecimalFormat;
 import java.util.List;
 
+/*This is a coin adapter extends array adapter to show coinlist in the spinner*/
 public class CoinsAdapter extends ArrayAdapter<Coin> {
     private final String tag = "CoinsAdapter";
     private Activity context;

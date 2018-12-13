@@ -1,5 +1,9 @@
 package uk.ac.ed.coinz;
 
+/*This is a user class
+*
+* it's used when storing the user information as an object to the cloud database
+* */
 public class User {
     private String email;
     private String uid;
