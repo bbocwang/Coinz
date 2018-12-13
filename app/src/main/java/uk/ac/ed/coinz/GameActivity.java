@@ -150,6 +150,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         aSwitch.setOnCheckedChangeListener(this);
         findViewById(R.id.collectButton).setOnClickListener(this);
         findViewById(R.id.wallet).setOnClickListener(this);
+        permissionsManager = new PermissionsManager(this);
+        if(!permissionsManager.areLocationPermissionsGranted(this)){
+            permissionsManager.requestLocationPermissions(this);
+        }
     }
 
     //this method is called when the app starts, to get the user's wallet information
@@ -488,8 +492,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onPermissionResult(boolean granted) {
         if(granted){
             enableLocationComponent();
+            initializeLocationEngine();
         }else {
-            Toast.makeText(this, R.string.user_location_permission_not_granted,
+            Toast.makeText(this, "Location permission not granted",
                     Toast.LENGTH_LONG).show();
             finish();
         }

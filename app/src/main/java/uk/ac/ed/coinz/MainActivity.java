@@ -12,6 +12,11 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.mapbox.android.core.permissions.PermissionsListener;
+import com.mapbox.android.core.permissions.PermissionsManager;
+
+import java.util.List;
+
 /*This is a activity for login
 *
 * There are two textview which user can input their email address and password to login
@@ -27,13 +32,14 @@ import com.google.firebase.auth.FirebaseAuth;
 * https://firebase.google.com/docs/auth/
 * https://www.youtube.com/watch?v=mF5MWLsb4cg
 * */
-public class MainActivity extends AppCompatActivity  implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity  implements View.OnClickListener, PermissionsListener {
     private final String tag = "MainActivity";
 
     private FirebaseAuth mAuth;
     EditText loginUsername;
     EditText loginPassword;
     ProgressBar progressBar;
+    PermissionsManager permissionsManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +51,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         loginUsername = findViewById(R.id.LoginUsername);
         loginPassword = findViewById(R.id.LoginPassword);
         progressBar = findViewById(R.id.progressbar0);
+        permissionsManager = new PermissionsManager(this);
     }
 
 
@@ -100,9 +107,13 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
 
                         // Sign in success, update UI with the signed-in user's information
                         Intent intent = new Intent(MainActivity.this,GameActivity.class);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        //intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         //start the game activity
-                        startActivity(intent);
+                        if(!PermissionsManager.areLocationPermissionsGranted(this)){
+                            permissionsManager.requestLocationPermissions(this);
+                        }else{
+                            startActivity(intent);
+                        }
                     } else {
 
                         // If sign in fails, display a message.
@@ -131,5 +142,21 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                     break;
                 }
         }
+    }
+
+    @Override
+    public void onExplanationNeeded(List<String> permissionsToExplain) {
+        Toast.makeText(this,"Sorry, we need the location permission to show you on the map",Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onPermissionResult(boolean granted) {
+        if(granted){
+            Intent intent = new Intent(MainActivity.this,GameActivity.class);
+            startActivity(intent);
+        }else{
+            Toast.makeText(this,"Sorry, we need the location permission to show you on the map",Toast.LENGTH_LONG).show();
+        }
+
     }
 }

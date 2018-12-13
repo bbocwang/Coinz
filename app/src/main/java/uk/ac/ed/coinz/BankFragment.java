@@ -18,6 +18,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -25,6 +26,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -65,6 +69,7 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
     private Integer remaining;
     TextView textViewRemainingCoin;
     private ListView listView;
+    private int isNewUser;
 
     //Database related stuff
     private DatabaseReference walletRef;
@@ -89,11 +94,14 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
         selectedCurrency = null;
         bankList = new ArrayList<>();
         rates = new HashMap<>();
+        isNewUser = 1;
 
         //fetch bank account information from database
         updateBankinfo();
         //update the current rate
         updateChangeRate();
+        //check if current user is a new user
+        checkNewUser();
 
         //initialize the layout
         View view = inflater.inflate(R.layout.fragment_bank, container, false);
@@ -159,6 +167,29 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
             }
         });
         return view;
+    }
+
+
+    //check if this is the first day of the current user, if it is, when sending the coins to the
+    //bank, the user will get double gold
+    private void checkNewUser() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference newUserRef = db.collection("NewUser").document(currentUser.getUid());
+        newUserRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                if(documentSnapshot != null){
+                    NewUser newUser = documentSnapshot.toObject(NewUser.class);
+                    if (newUser != null && newUser.getNewUserId()
+                            .equals(currentUser.getUid()) && newUser
+                            .getRegisterDate().equals(downloadDate)) {
+                        isNewUser = 2;
+                        Toast.makeText(getActivity(),"You can get double gold coins " +
+                                "when you send some coin to the bank today!",Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+        });
     }
 
     @SuppressLint("LogNotTimber")
@@ -279,7 +310,9 @@ public class BankFragment extends Fragment implements AdapterView.OnItemSelected
                 Log.d(tag,"[On storing Coin] Trying to store the coin");
                 BankAccount bankAccount = dataSnapshot.getValue(BankAccount.class);
                 if(selectedId != null){
-                    Double gold = selectedValue * rates.get(selectedCurrency);
+
+                    //here, if the current user is a new user, the gold value is doubled.
+                    Double gold = selectedValue * rates.get(selectedCurrency)*isNewUser;
                     walletRef = database.getReference("users").child(currentUser
                             .getUid()).child("wallet").child(selectedId);
 

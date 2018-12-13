@@ -1,5 +1,6 @@
 package uk.ac.ed.coinz;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -9,9 +10,19 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.mapbox.android.core.permissions.PermissionsListener;
+import com.mapbox.android.core.permissions.PermissionsManager;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.List;
 import java.util.Objects;
 /*
 * This is a register activity
@@ -26,11 +37,12 @@ import java.util.Objects;
 * https://firebase.google.com/docs/auth/
 * https://www.youtube.com/watch?v=mF5MWLsb4cg
 * */
-public class RegisterActivity extends AppCompatActivity implements View.OnClickListener {
+public class RegisterActivity extends AppCompatActivity implements View.OnClickListener, PermissionsListener {
 
     private FirebaseAuth mAuth;
     ProgressBar progressBar;
     EditText editTextEmail, editTextPassword;
+    PermissionsManager permissionsManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +55,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         findViewById(R.id.signUpButton).setOnClickListener(this);
         progressBar = findViewById(R.id.progressbar);
         findViewById(R.id.textViewLogin).setOnClickListener(this);
+        permissionsManager = new PermissionsManager(this);
     }
 
 
@@ -91,10 +104,15 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                 .addOnCompleteListener(RegisterActivity.this, task -> {
                     progressBar.setVisibility(View.GONE);
                     if (task.isSuccessful()){
-                        Toast.makeText(getApplicationContext(),"Registered Successful", Toast.LENGTH_SHORT).show();
+                        storeNewUser();
+                        Toast.makeText(getApplicationContext(),"Thank you for registering, as a gift,  " +
+                                "You can get double gold today!", Toast.LENGTH_LONG).show();
                         Intent intent = new Intent(RegisterActivity.this,GameActivity.class);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        startActivity(intent);
+                        if(!PermissionsManager.areLocationPermissionsGranted(this)){
+                            permissionsManager.requestLocationPermissions(this);
+                        }else{
+                            startActivity(intent);
+                        }
                     }
                     else {
                         if(task.getException() instanceof FirebaseAuthUserCollisionException){
@@ -108,6 +126,27 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                     }
                 });
             return true;
+    }
+
+    //store the new user id and their registing date, for new user gift
+    private void storeNewUser() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        String newUserId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
+        Calendar calendar = Calendar.getInstance();
+        @SuppressLint("SimpleDateFormat")
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+        String currentDate = dateFormat.format(calendar.getTime());
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        if (currentUser != null) {
+            DocumentReference newUserRef = db.
+                    collection("NewUser").document(currentUser.getUid());
+            newUserRef.set(new NewUser(newUserId,currentDate)).addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+
+                }
+            });
+        }
     }
 
     @Override
@@ -125,6 +164,22 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                 break;
             case R.id.textViewLogin:
                 startActivity(new Intent(this,MainActivity.class));
+        }
+    }
+
+    @Override
+    public void onExplanationNeeded(List<String> permissionsToExplain) {
+        Toast.makeText(this,"Sorry, we need the location permission to show you on the map",Toast.LENGTH_LONG).show();
+    }
+
+    //the get location result call back function
+    @Override
+    public void onPermissionResult(boolean granted) {
+        if(granted){
+            Intent intent = new Intent(RegisterActivity.this,GameActivity.class);
+            startActivity(intent);
+        }else{
+            Toast.makeText(this,"Sorry, we need the location permission to show you on the map",Toast.LENGTH_LONG).show();
         }
     }
 }
