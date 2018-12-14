@@ -29,6 +29,11 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
 
+/*
+* Check share spare change fragment
+*
+* */
+
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class ShareSpareChangeFailTest {

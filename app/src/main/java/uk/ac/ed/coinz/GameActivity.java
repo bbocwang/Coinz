@@ -154,6 +154,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         if(!permissionsManager.areLocationPermissionsGranted(this)){
             permissionsManager.requestLocationPermissions(this);
         }
+        Toast.makeText(this ,"Safety warning: please don't use this app when" +
+                " walking on the street",Toast.LENGTH_LONG).show();
     }
 
     //this method is called when the app starts, to get the user's wallet information
@@ -256,12 +258,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
                 }
-
-                /*if(mapboxMap != null){
-                    mapboxMap.clear();
-                    createMarkers(features);
-                    Log.d(tag, "[Realtime Database] Wallet updated" );
-                }*/
             }
 
             @Override

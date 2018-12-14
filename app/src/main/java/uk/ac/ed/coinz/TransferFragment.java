@@ -31,6 +31,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/*This is a fragment used for transfer
+*
+* the user can only transfer their spare change to other user
+* if the remaining coins is not 0, the transfer will be fail.
+* */
+
 @SuppressLint("LogNotTimber")
 public class TransferFragment extends Fragment implements AdapterView.OnItemSelectedListener, View.OnClickListener {
     Spinner coinSpinner;
@@ -65,6 +71,8 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
         transfernote = view.findViewById(R.id.transferNote);
         view.findViewById(R.id.transferButton).setOnClickListener(this);
 
+        //check spare change: fetch the remaining coins from the database
+        //if it's 0, the transfer can be success
         checkSpareChange = checkSpareChange();
 
 
@@ -111,6 +119,7 @@ public class TransferFragment extends Fragment implements AdapterView.OnItemSele
                         value = Double.valueOf(df.format(value));
                         String value_string = String.valueOf(value);
                         String info = value_string +" "+ currency;
+
                         //Using the StringWithTag class to store the ID of the coin
                         coinInfo.add(new StringWithTag(info,c.getId(),currency,c.getValue()));
                     }

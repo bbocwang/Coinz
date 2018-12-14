@@ -21,30 +21,28 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.replaceText;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
-import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
 
-/*
-* wallet fragment test
-* */
+/*Testing if the all the buttons are exists*/
+
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class WalletActivityTest {
+public class ButtonExistsTest {
+
+    @Rule
+    public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
 
     @Rule
     public GrantPermissionRule permissionRule = GrantPermissionRule
             .grant(android.Manifest.permission.ACCESS_FINE_LOCATION);
 
-    @Rule
-    public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
-
     @Test
-    public void walletActivityTest() {
+    public void bottonExistsTest() {
 
         ViewInteraction appCompatEditText = onView(
                 allOf(withId(R.id.LoginUsername),
@@ -56,7 +54,6 @@ public class WalletActivityTest {
                         isDisplayed()));
         appCompatEditText.perform(click());
 
-
         ViewInteraction appCompatEditText2 = onView(
                 allOf(withId(R.id.LoginUsername),
                         childAtPosition(
@@ -65,29 +62,9 @@ public class WalletActivityTest {
                                         0),
                                 1),
                         isDisplayed()));
-        appCompatEditText2.perform(replaceText("123"), closeSoftKeyboard());
+        appCompatEditText2.perform(replaceText("123@gmail.com"), closeSoftKeyboard());
 
         ViewInteraction appCompatEditText3 = onView(
-                allOf(withId(R.id.LoginUsername), withText("123"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText3.perform(replaceText("123@gmail.com"));
-
-        ViewInteraction appCompatEditText4 = onView(
-                allOf(withId(R.id.LoginUsername), withText("123@gmail.com"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                1),
-                        isDisplayed()));
-        appCompatEditText4.perform(closeSoftKeyboard());
-
-        ViewInteraction appCompatEditText5 = onView(
                 allOf(withId(R.id.LoginPassword),
                         childAtPosition(
                                 childAtPosition(
@@ -95,7 +72,7 @@ public class WalletActivityTest {
                                         0),
                                 2),
                         isDisplayed()));
-        appCompatEditText5.perform(replaceText("123456"), closeSoftKeyboard());
+        appCompatEditText3.perform(replaceText("123456"), closeSoftKeyboard());
 
         ViewInteraction relativeLayout = onView(
                 allOf(withId(R.id.loginButton),
@@ -108,50 +85,35 @@ public class WalletActivityTest {
                         isDisplayed()));
         relativeLayout.perform(click());
 
+
         // Added a sleep statement to match the app's execution delay.
         // The recommended way to handle such scenarios is to use Espresso idling resources:
         // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
         try {
-            Thread.sleep(812);
+            Thread.sleep(1152);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
+        ViewInteraction imageView = onView(
+                allOf(withId(R.id.collectButton),
+                        isDisplayed()));
+        imageView.check(matches(isDisplayed()));
 
-        ViewInteraction appCompatImageView = onView(
+        ViewInteraction imageView2 = onView(
+                allOf(withId(R.id.collectButton),
+                        isDisplayed()));
+        imageView2.check(matches(isDisplayed()));
+
+        ViewInteraction imageView3 = onView(
                 allOf(withId(R.id.wallet),
                         isDisplayed()));
-        appCompatImageView.perform(click());
+        imageView3.check(matches(isDisplayed()));
 
-        // Added a sleep statement to match the app's execution delay.
-        // The recommended way to handle such scenarios is to use Espresso idling resources:
-        // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
-        try {
-            Thread.sleep(366);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        ViewInteraction bottomNavigationItemView = onView(
-                allOf(withId(R.id.nav_mail), withContentDescription("Transfer"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(R.id.bottom_navigation),
-                                        0),
-                                1),
+        ViewInteraction switch_ = onView(
+                allOf(withId(R.id.switch1),
                         isDisplayed()));
-        bottomNavigationItemView.perform(click());
-
-        ViewInteraction bottomNavigationItemView2 = onView(
-                allOf(withId(R.id.nav_bank), withContentDescription("Bank"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(R.id.bottom_navigation),
-                                        0),
-                                2),
-                        isDisplayed()));
-        bottomNavigationItemView2.perform(click());
-
+        switch_.check(matches(isDisplayed()));
 
     }
 

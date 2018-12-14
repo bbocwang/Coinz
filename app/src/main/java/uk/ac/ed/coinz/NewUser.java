@@ -7,7 +7,7 @@ package uk.ac.ed.coinz;
 * */
 class NewUser {
     private String newUserId;
-    private String registerDate;
+    private String registerDate;//store the day of register
 
     NewUser(){}
 

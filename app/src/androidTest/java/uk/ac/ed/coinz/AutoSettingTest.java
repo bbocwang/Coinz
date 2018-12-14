@@ -28,6 +28,10 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
 
+/*
+Testing if the auto switch is working
+*/
+
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class AutoSettingTest {
@@ -95,7 +99,7 @@ public class AutoSettingTest {
         relativeLayout.perform(click());
 
         try {
-            Thread.sleep(1116);
+            Thread.sleep(1616);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -106,51 +110,26 @@ public class AutoSettingTest {
 
         ViewInteraction switch_2 = onView(
                 allOf(withId(R.id.switch1), withText("Auto"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                3),
                         isDisplayed()));
         switch_2.perform(click());
 
         ViewInteraction switch_3 = onView(
                 allOf(withId(R.id.switch1), withText("Auto"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                3),
                         isDisplayed()));
         switch_3.perform(click());
 
         ViewInteraction switch_4 = onView(
                 allOf(withId(R.id.switch1), withText("Auto"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                3),
                         isDisplayed()));
         switch_4.perform(click());
 
         ViewInteraction switch_5 = onView(
                 allOf(withId(R.id.switch1), withText("Auto"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                3),
                         isDisplayed()));
         switch_5.perform(click());
 
         ViewInteraction switch_6 = onView(
                 allOf(withId(R.id.switch1), withText("Auto"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                3),
                         isDisplayed()));
         switch_6.perform(click());
 
