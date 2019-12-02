@@ -1,3 +1,2 @@
 # Coinz
-Wang Hao
-s1787269
+Project report : https://sway.office.com/C85J5NlSjdItLY9w?ref=Link
